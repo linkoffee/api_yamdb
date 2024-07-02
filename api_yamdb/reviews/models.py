@@ -1,6 +1,6 @@
 from django.db import models
 
-from .constants import MAX_NAME_LENGTH
+from .constants import MAX_NAME_LENGTH, CHAR_OUTPUT_LIMIT
 
 
 class Title(models.Model):
@@ -9,3 +9,6 @@ class Title(models.Model):
     description = models.TextField(blank=True)
     genre = ...  # Здесь пока ничего нет, т.к. нет модели Genre.
     category = ...  # Здесь пока ничего нет, т.к. нет модели Category.
+
+    def __str__(self):
+        return self.name[:CHAR_OUTPUT_LIMIT]
