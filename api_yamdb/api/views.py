@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 
-from .serializers import GenreSerializer, TitleSerializer
-from reviews.models import Genre, Title
+from .serializers import CategorySerializer, GenreSerializer, TitleSerializer
+from reviews.models import Category, Genre, Title
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -13,4 +13,10 @@ class TitleViewSet(viewsets.ModelViewSet):
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    permission_classes = ...  # Настройки доступа не настроены.
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
     permission_classes = ...  # Настройки доступа не настроены.

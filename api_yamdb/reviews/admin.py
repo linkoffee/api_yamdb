@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Genre, Title
+from .models import Category, Genre, Title
 
 admin.site.empty_value_display = 'Здесь пока ничего нет:('
 
@@ -25,6 +25,24 @@ class TitleAdmin(admin.ModelAdmin):
     )
     list_filter = (
         'title',
+    )
+
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = (
+        'name',
+        'slug',
+    )
+    list_editable = (
+        'name',
+    )
+    search_fields = (
+        'name',
+        'slug',
+    )
+    list_filter = (
+        'name',
     )
 
 
