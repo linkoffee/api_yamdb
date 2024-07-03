@@ -18,13 +18,13 @@ class TitleAdmin(admin.ModelAdmin):
         'description',
     )
     search_fields = (
-        'title',
+        'name',
         'year',
         'genre',
         'category',
     )
     list_filter = (
-        'title',
+        'name',
     )
 
 
@@ -34,14 +34,14 @@ class CategoryAdmin(admin.ModelAdmin):
         'name',
         'slug',
     )
-    list_editable = (
-        'name',
-    )
     search_fields = (
         'name',
         'slug',
     )
     list_filter = (
+        'name',
+    )
+    list_display_links = (
         'name',
     )
 
@@ -52,13 +52,13 @@ class GenreAdmin(admin.ModelAdmin):
         'name',
         'slug',
     )
-    list_editable = (
-        'name',
-    )
     search_fields = (
         'name',
         'slug',
     )
     list_filter = (
+        'name',
+    )
+    list_display_links = (
         'name',
     )
