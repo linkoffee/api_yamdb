@@ -1,22 +1,38 @@
 from rest_framework import viewsets
-
-from .serializers import CategorySerializer, GenreSerializer, TitleSerializer
-from reviews.models import Category, Genre, Title
+from rest_framework.generics import get_object_or_404
+from .serializers import (CategorySerializer, GenreSerializer,
+                          TitleSerializer, ReviewSerializer)
+from reviews.models import Category, Genre, Title, Review
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    permission_classes = ...  # Настройки доступа не настроены.
+    # permission_classes = ...  # Настройки доступа не настроены.
 
 
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = ...  # Настройки доступа не настроены.
+    # permission_classes = ...  # Настройки доступа не настроены.
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = ...  # Настройки доступа не настроены.
+    # permission_classes = ...  # Настройки доступа не настроены.
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    serializer_class = ReviewSerializer
+
+    def get_queryset(self):
+        """Получаем отзывы к конкретному произведению."""
+        title = get_object_or_404(Title, pk=self.kwargs['title_id'])
+        return Review.objects.filter(title=title)
+
+    # def perform_create(self, serializer):
+    #     """Добавляем авторизованного пользователя к отзыву."""
+    #     title = get_object_or_404(Title, pk=self.kwargs['title_id'])
+    #     serializer.save(author=self.request.user, title=title)
+
