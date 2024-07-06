@@ -1,0 +1,26 @@
+{
+    "Category": {
+        "model": "CategoryModel",
+        "fields_mapping": {
+            "0": "name",
+            "1": "slug"
+        }
+    },
+    "Genre": {
+        "model": "GenreModel",
+        "fields_mapping": {
+            "0": "name",
+            "1": "slug"
+        }
+    },
+    "Title": {
+        "model": "TitleModel",
+        "fields_mapping": {
+            "0": "name",
+            "1": "year",
+            "2": "description",
+            "3": "genre",
+            "4": "category"
+        }
+    }
+}
