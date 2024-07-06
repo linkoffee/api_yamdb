@@ -1,7 +1,11 @@
-from rest_framework import viewsets
+from django.shortcuts import get_object_or_404
+from djoser.views import UserViewSet
+from rest_framework import filters, mixins, permissions, viewsets
+from rest_framework.pagination import LimitOffsetPagination
+from reviews.models import Category, Genre, MyUser, Title
 
-from .serializers import CategorySerializer, GenreSerializer, TitleSerializer
-from reviews.models import Category, Genre, Title
+from .serializers import (CategorySerializer, CustomUserSerializer,
+                          GenreSerializer, TitleSerializer)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -20,3 +24,8 @@ class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = ...  # Настройки доступа не настроены.
+
+
+class MyUserViewSet(UserViewSet):
+    model = MyUser
+    serializer_class = CustomUserSerializer

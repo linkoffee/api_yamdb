@@ -1,3 +1,5 @@
+from .models import MyUser
+from django.contrib.auth.admin import UserAdmin
 from django.contrib import admin
 
 from .models import Category, Genre, Title
@@ -62,3 +64,9 @@ class GenreAdmin(admin.ModelAdmin):
     list_display_links = (
         'name',
     )
+
+
+UserAdmin.fieldsets += (
+    ('Extra Fields', {'fields': ('role',)}),
+)
+admin.site.register(MyUser, UserAdmin)
