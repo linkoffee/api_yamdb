@@ -7,18 +7,18 @@ class TitleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        field = '__all__'
+        fields = '__all__'
 
 
 class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        field = '__all__'
+        fields = '__all__'
 
 
 class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        field = '__all__'
+        fields = '__all__'
