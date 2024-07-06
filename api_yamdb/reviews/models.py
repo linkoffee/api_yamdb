@@ -6,7 +6,7 @@ from .constants import MAX_NAME_LENGTH, MAX_SLUG_LENGTH, CHAR_OUTPUT_LIMIT
 
 from django.contrib.auth.models import AbstractUser
 from django.core import validators
-from django.db import models
+
 
 
 
@@ -68,11 +68,12 @@ class MyUser(AbstractUser):
         ]
     )
 
+User = get_user_model()
 
 class Review(models.Model):
     text = models.TextField()
     author = models.ForeignKey(
-        MyUser, on_delete=models.CASCADE, related_name='reviews'
+        User, on_delete=models.CASCADE, related_name='reviews'
     )
     score = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(10)],

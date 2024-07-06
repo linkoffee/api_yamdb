@@ -39,10 +39,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title = get_object_or_404(Title, pk=self.kwargs['title_id'])
         return Review.objects.filter(title=title)
 
-    # def perform_create(self, serializer):
-    #     """Добавляем авторизованного пользователя к отзыву."""
-    #     title = get_object_or_404(Title, pk=self.kwargs['title_id'])
-    #     serializer.save(author=self.request.user, title=title)
+    def perform_create(self, serializer):
+        """Добавляем авторизованного пользователя к отзыву."""
+        title = get_object_or_404(Title, pk=self.kwargs['title_id'])
+        serializer.save(author=self.request.user, title=title)
 
 
 
