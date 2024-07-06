@@ -1,4 +1,5 @@
 from django.urls import include, path
+from djoser.views import UserViewSet
 from rest_framework.routers import SimpleRouter
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -6,25 +7,24 @@ from rest_framework_simplejwt.views import (
     TokenVerifyView
 )
 
-# from .views import CommentViewSet, FollowViewSet, GroupViewSet, PostViewSet
+from .views import MyUserViewSet
 
 
-"""v1_router = SimpleRouter() 
-v1_router.register('posts', PostViewSet) 
-v1_router.register('groups', GroupViewSet) 
-v1_router.register( 
-    r'posts/(?P<post_id>\d+)/comments', 
-    CommentViewSet, 
-    basename='CommentModel', 
-) 
-v1_router.register('follow', FollowViewSet, basename='FollowModel') """
+v1_router = SimpleRouter()
+v1_router.register(
+    r'users/(?P<username>\[a-zA-Z0-9]+)/$',
+    MyUserViewSet,
+    basename='UserModel',
+)
 
 
 urlpatterns = [
-    # path('v1/', include('djoser.urls.jwt')),
-    # path('v1/auth/', include('djoser.urls.jwt')), здесь должен быть /signup/
+    path('v1/', include('djoser.urls.authtoken')),
+    path('v1/users/<slug>', include(v1_router.urls)),
+    path('v1/auth/signup/',
+         MyUserViewSet.as_view({'post': 'create'}), name="register"),
     path(
-        'v1/auth/token',
+        'v1/auth/token/',
         TokenObtainPairView.as_view(),
         name='token_obtain_pair'
     ),
@@ -37,7 +37,8 @@ urlpatterns = [
         'v1/auth/token/verify/',
         TokenVerifyView.as_view(),
         name='token_verify'
-    )  # но они нужны/желательны
+    ),  # но они нужны/желательны
+    path('v1/', include('djoser.urls')),
     # path('v1/', include(v1_router.urls)),
 ]
 
