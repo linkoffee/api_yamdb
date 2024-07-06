@@ -57,7 +57,7 @@ class MyUser(AbstractUser):
         max_length=150,
         unique=True,
         validators=[validators.RegexValidator(
-            regex='^[\w.@+ -]+\Z',
+            regex='^[\w.@+-]+\Z',
             message='Недопустимые символы в username',
         ),
         ]
