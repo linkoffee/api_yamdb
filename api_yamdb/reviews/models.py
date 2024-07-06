@@ -10,7 +10,7 @@ from django.db import models
 
 
 
-User = get_user_model()
+# User = get_user_model()
 
 class Category(models.Model):
     name = models.CharField(max_length=MAX_NAME_LENGTH)
@@ -72,7 +72,7 @@ class MyUser(AbstractUser):
 class Review(models.Model):
     text = models.TextField()
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='reviews'
+        MyUser, on_delete=models.CASCADE, related_name='reviews'
     )
     score = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(10)],

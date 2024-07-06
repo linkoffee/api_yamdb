@@ -6,7 +6,7 @@ import sys
 
 def main():
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'api_yamdb.settings')
-    os.system("python scripts/import_data.py")  # Запуск стороннего скрипта.
+    os.system("python scripts/1_import_data.py")  # Запуск стороннего скрипта.
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

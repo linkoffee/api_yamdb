@@ -2,15 +2,15 @@ from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
 from rest_framework import filters, mixins, permissions, viewsets
 from rest_framework.pagination import LimitOffsetPagination
-from reviews.models import Category, Genre, MyUser, Title
+from reviews.models import Category, Genre, MyUser, Title, Review
 
-from .serializers import (CategorySerializer, CustomUserSerializer,
-                          GenreSerializer, TitleSerializer)
+
 from rest_framework import viewsets
 from rest_framework.generics import get_object_or_404
 from .serializers import (CategorySerializer, GenreSerializer,
-                          TitleSerializer, ReviewSerializer)
-from reviews.models import Category, Genre, Title, Review
+                          CustomUserSerializer, TitleSerializer,
+                          ReviewSerializer)
+
 
 
 class TitleViewSet(viewsets.ModelViewSet):
