@@ -1,7 +1,11 @@
+from django.contrib.auth import get_user_model
 from django.db import models
 
 from .constants import MAX_NAME_LENGTH, MAX_SLUG_LENGTH, CHAR_OUTPUT_LIMIT
 
+
+
+User = get_user_model()
 
 class Category(models.Model):
     name = models.CharField(max_length=MAX_NAME_LENGTH)
@@ -36,10 +40,9 @@ class Title(models.Model):
 
 class Review(models.Model):
     text = models.TextField()
-    # author = models.ForeignKey(
-    #     User, on_delete=models.CASCADE, related_name='reviews'
-    # )
-    author = models.IntegerField()
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='reviews'
+    )
     score = models.IntegerField()
     pub_date = models.DateTimeField(auto_now_add=True)
     title = models.ForeignKey(
