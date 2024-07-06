@@ -6,7 +6,7 @@ from rest_framework_simplejwt.views import (
 )
 from rest_framework.routers import SimpleRouter, DefaultRouter
 from djoser.views import UserViewSet
-from django.urls import include, path
+from django.urls import include, path, re_path
 
 
 router = DefaultRouter()
@@ -32,7 +32,12 @@ user_router.register(
 urlpatterns = [
     path('v1/', include(router.urls)),
     path('v1/', include('djoser.urls.authtoken')),
-    path('v1/', include(user_router.urls)),
+    re_path(
+        # [\w.@+-]+\Z  в тз, [a-zA-Z0-9]+)/$ , [a-z0-9]+(?:-[a-z0-9]+)*$
+        r'^v1/users/(?P<username>[\w.@+-]+)/$',
+        MyUserViewSet.as_view({'get': 'retrieve'}),
+    ),
+    # path('v1/', include(user_router.urls)),
     path('v1/auth/signup/',
          MyUserViewSet.as_view({'post': 'create'}), name="register"),
     path(

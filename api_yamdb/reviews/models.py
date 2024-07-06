@@ -48,7 +48,8 @@ class MyUser(AbstractUser):
     role = models.CharField(
         max_length=1,
         choices=ROLE_CHOICES,
-        default='U'
+        default='User'   # было 'U' и я не делал миграции
+        # один чел в базе до сих пор с ролью 'U'
     )
 
     bio = models.TextField(default='Пусто')
