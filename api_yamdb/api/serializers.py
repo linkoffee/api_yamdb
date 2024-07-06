@@ -27,8 +27,8 @@ class CategorySerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериализатор данных модели отзывов."""
 
-    # author = serializers.SlugRelatedField(read_only=True,
-    #                                       slug_field='username')
+    author = serializers.SlugRelatedField(read_only=True,
+                                          slug_field='username')
 
     class Meta:
         model = Review
