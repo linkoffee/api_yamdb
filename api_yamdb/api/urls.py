@@ -8,6 +8,7 @@ from rest_framework.routers import SimpleRouter, DefaultRouter
 from djoser.views import UserViewSet
 from django.urls import include, path
 
+from .views import CategoryViewSet, GenreViewSet, TitleViewSet, ReviewViewSet
 
 router = DefaultRouter()
 router.register(
@@ -18,6 +19,9 @@ router.register(
 )
 router.register(
     'categories', CategoryViewSet, basename='categories'
+)
+router.register(
+    r'^titles/(?P<title_id>\d+)/reviews', ReviewViewSet, basename='reviews'
 )
 
 
