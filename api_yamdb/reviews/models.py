@@ -8,8 +8,6 @@ from django.contrib.auth.models import AbstractUser
 from django.core import validators
 
 
-# User = get_user_model()
-
 class Category(models.Model):
     name = models.CharField(max_length=MAX_NAME_LENGTH)
     slug = models.SlugField(unique=True, max_length=MAX_SLUG_LENGTH)
@@ -90,6 +88,23 @@ class Review(models.Model):
                 fields=('title', 'author'),
                 name='unique_title_and_author'),
         )
+
+    def __str__(self):
+        return self.text[:CHAR_OUTPUT_LIMIT]
+
+
+class Comment(models.Model):
+    text = models.TextField()
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='comments'
+    )
+    pub_date = models.DateTimeField(auto_now_add=True)
+    review = models.ForeignKey(
+        Review, on_delete=models.CASCADE, related_name='comments'
+    )
+
+    class Meta:
+        ordering = ('-pub_date',)
 
     def __str__(self):
         return self.text[:CHAR_OUTPUT_LIMIT]
