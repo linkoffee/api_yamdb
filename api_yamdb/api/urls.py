@@ -8,7 +8,8 @@ from rest_framework.routers import SimpleRouter, DefaultRouter
 from djoser.views import UserViewSet
 from django.urls import include, path
 
-from .views import CategoryViewSet, GenreViewSet, TitleViewSet, ReviewViewSet
+from .views import (CategoryViewSet, GenreViewSet, TitleViewSet, ReviewViewSet,
+                    CommentViewSet)
 
 router = DefaultRouter()
 router.register(
@@ -23,7 +24,10 @@ router.register(
 router.register(
     r'^titles/(?P<title_id>\d+)/reviews', ReviewViewSet, basename='reviews'
 )
-
+router.register(
+    r'^titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
+    CommentViewSet, basename='comments'
+)
 
 user_router = SimpleRouter()
 user_router.register(

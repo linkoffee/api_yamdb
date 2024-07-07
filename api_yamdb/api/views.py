@@ -2,14 +2,14 @@ from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
 from rest_framework import filters, mixins, permissions, viewsets
 from rest_framework.pagination import PageNumberPagination
-from reviews.models import Category, Genre, MyUser, Title, Review
+from reviews.models import Category, Genre, MyUser, Title, Review, Comment
 
 
 from rest_framework import viewsets
 from rest_framework.generics import get_object_or_404
 from .serializers import (CategorySerializer, GenreSerializer,
                           CustomUserSerializer, TitleSerializer,
-                          ReviewSerializer)
+                          ReviewSerializer, CommentSerializer)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -53,3 +53,19 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class MyUserViewSet(UserViewSet):
     model = MyUser
     serializer_class = CustomUserSerializer
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    model = Comment
+    serializer_class = CommentSerializer
+
+    def get_queryset(self):
+        """Получаем комментарии к конкретному отзыву."""
+        review = get_object_or_404(Review, pk=self.kwargs['review_id'])
+        return Comment.objects.filter(review=review)
+
+    def perform_create(self, serializer):
+        """Присваиваем автора комментарию."""
+        review = get_object_or_404(Review, pk=self.kwargs['review_id'])
+        serializer.save(author=self.request.user, review=review)
+

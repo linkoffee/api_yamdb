@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from reviews.models import Category, Genre, Title, Review
+from reviews.models import Category, Genre, Title, Review, Comment
 
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.validators import UniqueTogetherValidator
@@ -108,3 +108,11 @@ class CustomUserSerializer(UserSerializer):
         if len(data['username']) or len(data['first_name']) > 150:
             raise serializers.ValidationError('name too long')
         return data
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    """Сериализатор данных модели комментариев."""
+    class Meta:
+        model = Comment
+        fields = ('id', 'text', 'author', 'pub_date',)
+
