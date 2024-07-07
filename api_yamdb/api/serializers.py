@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.generics import get_object_or_404
 
 from reviews.models import Category, Genre, Title, Review
 
@@ -13,12 +14,26 @@ from rest_framework_simplejwt.serializers import (
     TokenObtainSerializer
 )
 
+# class Rating:
+#
+#
+#     def to_representation(self, value):
+#         rating = get_object_or_404(Title, self.kwargs['title_id'])
+#         return value / 5 * 100
+
 
 class TitleSerializer(serializers.ModelSerializer):
+    # rating = serializers.SerializerMethodField()
+    # rating = 1
 
     class Meta:
         model = Title
         fields = '__all__'
+
+    # def get_rating(self, obj):
+    #     # title = get_object_or_404(Title, pk=self.kwargs['title'])
+    #     rating = obj.get_object_or_404(Rating)
+    #     return rating
 
 
 class GenreSerializer(serializers.ModelSerializer):

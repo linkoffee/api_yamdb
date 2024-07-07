@@ -1,3 +1,4 @@
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
 from rest_framework import filters, mixins, permissions, viewsets
@@ -13,7 +14,7 @@ from .serializers import (CategorySerializer, GenreSerializer,
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
+    queryset = Title.objects.all().annotate(rating=Avg('reviews__score'))
     serializer_class = TitleSerializer
     # permission_classes = ...  # Настройки доступа не настроены.
 
