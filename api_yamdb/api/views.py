@@ -12,7 +12,6 @@ from .serializers import (CategorySerializer, GenreSerializer,
                           ReviewSerializer)
 
 
-
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
@@ -22,12 +21,14 @@ class TitleViewSet(viewsets.ModelViewSet):
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    pagination_class = LimitOffsetPagination
     # permission_classes = ...  # Настройки доступа не настроены.
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    pagination_class = LimitOffsetPagination
     # permission_classes = ...  # Настройки доступа не настроены.
 
 
@@ -43,7 +44,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
         """Добавляем авторизованного пользователя к отзыву."""
         title = get_object_or_404(Title, pk=self.kwargs['title_id'])
         serializer.save(author=self.request.user, title=title)
-
 
 
 class MyUserViewSet(UserViewSet):

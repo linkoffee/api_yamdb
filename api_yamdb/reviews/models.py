@@ -8,8 +8,6 @@ from django.contrib.auth.models import AbstractUser
 from django.core import validators
 
 
-
-
 # User = get_user_model()
 
 class Category(models.Model):
@@ -68,7 +66,9 @@ class MyUser(AbstractUser):
         ]
     )
 
+
 User = get_user_model()
+
 
 class Review(models.Model):
     text = models.TextField()
@@ -77,7 +77,7 @@ class Review(models.Model):
     )
     score = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(10)],
-            )
+    )
     pub_date = models.DateTimeField(auto_now_add=True)
     title = models.ForeignKey(
         Title, on_delete=models.CASCADE, related_name='reviews'

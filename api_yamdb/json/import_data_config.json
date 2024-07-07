@@ -1,26 +1,30 @@
 {
-    "Category": {
-        "model": "CategoryModel",
+    "category": {
+        "model": "Category",
         "fields_mapping": {
-            "0": "name",
-            "1": "slug"
+            "id": "id",
+            "name": "name",
+            "slug": "slug",
+            "unique_field": "id"
         }
     },
-    "Genre": {
-        "model": "GenreModel",
+    "genre": {
+        "model": "Genre",
         "fields_mapping": {
-            "0": "name",
-            "1": "slug"
+            "id": "id",
+            "name": "name",
+            "slug": "slug",
+            "unique_field": "id"
         }
     },
-    "Title": {
-        "model": "TitleModel",
+    "titles": {
+        "model": "Title",
         "fields_mapping": {
-            "0": "name",
-            "1": "year",
-            "2": "description",
-            "3": "genre",
-            "4": "category"
+            "id": "id",
+            "name": "name",
+            "year": "year",
+            "category": "category",
+            "unique_field": "id"
         }
     }
 }
