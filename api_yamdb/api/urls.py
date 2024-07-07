@@ -29,9 +29,10 @@ user_router.register(
 )
 
 
-urlpatterns = [
+urlpatterns = [    # некоторые урлы в двух местах, пока не уверен, какие должны находиться первыми
     path('v1/', include(router.urls)),
     path('v1/', include('djoser.urls.authtoken')),
+    path('v1/', include('djoser.urls')),
     re_path(
         # [\w.@+-]+\Z  в тз, [a-zA-Z0-9]+)/$ , [a-z0-9]+(?:-[a-z0-9]+)*$
         r'^v1/users/(?P<username>[\w.@+-]+)/$',
@@ -55,6 +56,6 @@ urlpatterns = [
         TokenVerifyView.as_view(),
         name='token_verify'
     ),  # но они нужны/желательны
-    path('v1/', include('djoser.urls')),
+    # path('v1/', include('djoser.urls')),
     # path('v1/', include(user_router.urls)),
 ]

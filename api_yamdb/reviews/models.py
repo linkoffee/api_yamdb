@@ -1,10 +1,8 @@
-from django.db import models
-
-from .constants import MAX_NAME_LENGTH, MAX_SLUG_LENGTH, CHAR_OUTPUT_LIMIT
-
 from django.contrib.auth.models import AbstractUser
 from django.core import validators
 from django.db import models
+
+from .constants import CHAR_OUTPUT_LIMIT, MAX_NAME_LENGTH, MAX_SLUG_LENGTH
 
 
 class Category(models.Model):
@@ -53,12 +51,13 @@ class MyUser(AbstractUser):
     )
 
     bio = models.TextField(default='Пусто')
+    email = models.EmailField(blank=False, unique=True)
 
     username = models.CharField(
         max_length=150,
         unique=True,
         validators=[validators.RegexValidator(
-            regex='^[\w.@+-]+\Z',
+            regex=r'^[\w.@+-]+\Z',
             message='Недопустимые символы в username',
         ),
         ]

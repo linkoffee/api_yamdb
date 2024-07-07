@@ -25,7 +25,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'djoser',
-    'reviews',
+    'reviews.apps.ReviewsConfig',
     'api.apps.ApiConfig'
 ]
 
@@ -128,6 +128,7 @@ DJOSER = {
     'ACCOUNT_ACTIVATION_URL': 'http://127.0.0.1:8000/api/v1/auth/signup/',
     'SEND_ACTIVATION_EMAIL': True,
     'SERIALIZERS': {
+        # 'user_create': 'djoser.serializers.UserCreateSerializer'
         'user_create': 'djoser.serializers.UserCreateSerializer',
         'user': 'api.serializers.CustomUserSerializer',
     },

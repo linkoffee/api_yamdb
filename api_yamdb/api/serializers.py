@@ -1,17 +1,11 @@
-from rest_framework import serializers
-
-from reviews.models import Category, Genre, Title
-
-from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework.validators import UniqueTogetherValidator
-from rest_framework import serializers
-from reviews.models import MyUser
-
+from django.utils.text import slugify
 from djoser.serializers import UserSerializer
-from rest_framework_simplejwt.serializers import (
-    TokenObtainPairSerializer,
-    TokenObtainSerializer
-)
+from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
+from rest_framework_simplejwt.serializers import (TokenObtainPairSerializer,
+                                                  TokenObtainSerializer)
+from rest_framework_simplejwt.views import TokenObtainPairView
+from reviews.models import Category, Genre, MyUser, Title
 
 
 class TitleSerializer(serializers.ModelSerializer):
@@ -84,14 +78,13 @@ class CustomUserSerializer(UserSerializer):
 
     class Meta:
         model = MyUser
-        fields = (
-            'email',
-            'username',
-            'first_name',
-            'last_name',
-            'role',
-            'bio'
-        )
+        fields = '__all__'
+
+    def get_slug(self, obj):
+        return slugify(obj.username)
+
+    """def to_representation(self, obj):
+        return getattr(obj, self.slug_field)"""
 
     def validate(self, data):
         if len(data['username']) or len(data['first_name']) > 150:

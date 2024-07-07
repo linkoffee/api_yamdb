@@ -29,3 +29,5 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class MyUserViewSet(UserViewSet):
     model = MyUser
     serializer_class = CustomUserSerializer
+    lookup_field = 'username'
+    # lookup_field = 'username'  # ещё есть lookup_url_kwarg = 'username'
