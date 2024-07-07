@@ -17,6 +17,14 @@
             "unique_field": "id"
         }
     },
+    "review": {
+        "model": "Review",
+        "fields_mapping": {
+            "id": "id",
+            "title_id": "title_id",
+            ""
+        }
+    },
     "titles": {
         "model": "Title",
         "fields_mapping": {
@@ -24,6 +32,19 @@
             "name": "name",
             "year": "year",
             "category": "category",
+            "unique_field": "id"
+        }
+    },
+    "users": {
+        "model": "MyUser",
+        "fields_mapping": {
+            "id": "id",
+            "username": "username",
+            "email": "email",
+            "role": "role",
+            "bio": "bio",
+            "first_name": "first_name",
+            "last_name": "last_name",
             "unique_field": "id"
         }
     }
