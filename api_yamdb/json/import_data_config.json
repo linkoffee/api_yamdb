@@ -22,7 +22,11 @@
         "fields_mapping": {
             "id": "id",
             "title_id": "title_id",
-            ""
+            "text": "text",
+            "author": "author",
+            "score": "score",
+            "pub_date": "pub_date",
+            "unique_field": "id"
         }
     },
     "titles": {
