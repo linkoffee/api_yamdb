@@ -1,59 +1,29 @@
-from .views import MyUserViewSet, CategoryViewSet, GenreViewSet, TitleViewSet
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-    TokenVerifyView
-)
-from rest_framework.routers import SimpleRouter, DefaultRouter
-from djoser.views import UserViewSet
 from django.urls import include, path
+from rest_framework import routers
 
-from .views import CategoryViewSet, GenreViewSet, TitleViewSet, ReviewViewSet
+from .views import (CategoryViewSet, CommentViewSet, GenreViewSet,
+                    ReviewViewSet, TitleViewSet, UserViewSet, get_token,
+                    signup_new_user)
 
-router = DefaultRouter()
-router.register(
-    'titles', TitleViewSet, basename='titles'
-)
-router.register(
-    'genres', GenreViewSet, basename='genres'
-)
-router.register(
-    'categories', CategoryViewSet, basename='categories'
-)
-router.register(
-    r'^titles/(?P<title_id>\d+)/reviews', ReviewViewSet, basename='reviews'
-)
+app_name = 'api'
 
+router_v1 = routers.DefaultRouter()
 
-user_router = SimpleRouter()
-user_router.register(
-    r'users/(?P<username>\[a-zA-Z0-9]+)/$',
-    MyUserViewSet,
-    basename='UserModel',
-)
-
+router_v1.register('categories', CategoryViewSet)
+router_v1.register('genres', GenreViewSet)
+router_v1.register('titles', TitleViewSet)
+router_v1.register('users', UserViewSet)
+router_v1.register(
+    r'^titles/(?P<title_id>\d+)/reviews',
+    ReviewViewSet,
+    basename='review')
+router_v1.register(
+    r'^titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
+    CommentViewSet,
+    basename='comments')
 
 urlpatterns = [
-    path('v1/', include(router.urls)),
-    path('v1/', include('djoser.urls.authtoken')),
-    path('v1/', include(user_router.urls)),
-    path('v1/auth/signup/',
-         MyUserViewSet.as_view({'post': 'create'}), name="register"),
-    path(
-        'v1/auth/token/',
-        TokenObtainPairView.as_view(),
-        name='token_obtain_pair'
-    ),
-    path(
-        'v1/auth/token/refresh/',
-        TokenRefreshView.as_view(),
-        name='token_refresh'
-    ),  # последних двух нет в ТЗ
-    path(
-        'v1/auth/token/verify/',
-        TokenVerifyView.as_view(),
-        name='token_verify'
-    ),  # но они нужны/желательны
-    path('v1/', include('djoser.urls')),
-    # path('v1/', include(user_router.urls)),
+    path('v1/', include(router_v1.urls)),
+    path('v1/auth/signup/', signup_new_user, name='auth_signup'),
+    path('v1/auth/token/', get_token, name='auth_token')
 ]
