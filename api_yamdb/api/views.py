@@ -4,6 +4,7 @@ from rest_framework import filters, mixins, permissions, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from reviews.models import Category, Genre, MyUser, Title
 
+from .permissions import IsAuthorOrReadOnly, UserRolePermissions, RolePermissions
 from .serializers import (CategorySerializer, CustomUserSerializer,
                           GenreSerializer, TitleSerializer)
 
@@ -30,4 +31,5 @@ class MyUserViewSet(UserViewSet):
     model = MyUser
     serializer_class = CustomUserSerializer
     lookup_field = 'username'
+    permission_classes = [UserRolePermissions,]
     # lookup_field = 'username'  # ещё есть lookup_url_kwarg = 'username'
