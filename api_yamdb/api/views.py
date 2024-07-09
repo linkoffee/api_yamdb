@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
 from rest_framework import filters, mixins, permissions, viewsets
 from rest_framework.pagination import PageNumberPagination
-from reviews.models import Category, Genre, MyUser, Title, Review
+from reviews.models import Category, Genre, MyUser, Title, Review, User
 
 
 from rest_framework import viewsets
@@ -10,12 +10,13 @@ from rest_framework.generics import get_object_or_404
 from .serializers import (CategorySerializer, GenreSerializer,
                           CustomUserSerializer, TitleSerializer,
                           ReviewSerializer)
+# from .permissions import IsAdminOrReadOnly
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    # permission_classes = ...  # Настройки доступа не настроены.
+    # permission_classes = (IsAdminOrReadOnly,)
 
 
 class GenreViewSet(viewsets.ModelViewSet):
@@ -24,7 +25,7 @@ class GenreViewSet(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
-    # permission_classes = ...  # Настройки доступа не настроены.
+    # permission_classes = (IsAdminOrReadOnly,)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -33,7 +34,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
-    # permission_classes = ...  # Настройки доступа не настроены.
+    # permission_classes = (IsAdminOrReadOnly,)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

@@ -15,6 +15,14 @@ from rest_framework_simplejwt.serializers import (
 
 
 class TitleSerializer(serializers.ModelSerializer):
+    """Сериализатор данных модели произведения."""
+
+    genre = serializers.SlugRelatedField(
+        queryset=Genre.objects.all(), slug_field='slug', many=True
+    )
+    category = serializers.SlugRelatedField(
+        queryset=Category.objects.all(), slug_field='slug'
+    )
 
     class Meta:
         model = Title
@@ -22,17 +30,21 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class GenreSerializer(serializers.ModelSerializer):
+    """Сериализатор данных модели жанра."""
 
     class Meta:
         model = Genre
         fields = ('name', 'slug')
+        lookup_field = 'slug'
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    """Сериализатор данных модели категории."""
 
     class Meta:
         model = Category
         fields = ('name', 'slug')
+        lookup_field = 'slug'
 
 
 class ReviewSerializer(serializers.ModelSerializer):
