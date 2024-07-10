@@ -125,16 +125,28 @@ class GenreTitle(models.Model):
 
 class Review(models.Model):
     """Модель отзыва."""
-    text = models.TextField()
+    text = models.TextField(
+        verbose_name='Текст отзыва'
+    )
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='reviews'
+        User,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name='Автор'
     )
     score = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(10)],
+        verbose_name='Оценка'
     )
-    pub_date = models.DateTimeField(auto_now_add=True)
+    pub_date = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата добавления'
+    )
     title = models.ForeignKey(
-        Title, on_delete=models.CASCADE, related_name='reviews'
+        Title,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name='Наименование произведения'
     )
 
     class Meta:
@@ -144,6 +156,38 @@ class Review(models.Model):
                 fields=('title', 'author'),
                 name='unique_title_and_author'),
         )
+        verbose_name = 'Отзыв'
+        verbose_name_plural = 'Отзывы'
+
+    def __str__(self):
+        return self.text[:CHAR_OUTPUT_LIMIT]
+
+
+class Comment(models.Model):
+    """Модель комментария."""
+    text = models.TextField(
+        verbose_name='Текст комментария'
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name='Автор'
+    )
+    pub_date = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата добавления')
+    review = models.ForeignKey(
+        Review,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name='Отзыв'
+    )
+
+    class Meta:
+        ordering = ('-pub_date',)
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
 
     def __str__(self):
         return self.text[:CHAR_OUTPUT_LIMIT]
