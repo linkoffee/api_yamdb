@@ -38,11 +38,14 @@ class GenreViewSet(CreateListDestroyViewSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     # queryset = Title.objects.annotate(rating=Avg('reviews__score')).all()
+
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
+    http_method_names = ['get', 'post', 'patch', 'delete']
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
     permission_classes = (AdminOrReadOnly,)
+
 
     # def get_queryset(self):
     #     return Title.objects.filter(rating=Avg(self.request.data['rating']))
@@ -54,7 +57,9 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
+
     serializer_class = ReviewSerializer
+    http_method_names = ['get', 'post', 'patch', 'delete']
     permission_classes = [
         permissions.IsAuthenticatedOrReadOnly,
         IsAuthorOrModerPermission]
@@ -72,6 +77,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
+    http_method_names = ['get', 'post', 'patch', 'delete']
     permission_classes = [
         permissions.IsAuthenticatedOrReadOnly,
         IsAuthorOrModerPermission]
@@ -94,8 +100,9 @@ class CommentViewSet(viewsets.ModelViewSet):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    http_method_names = ['get', 'post', 'patch', 'delete']
     permission_classes = (IsAdminOrStaffPermission,)
-    search_fields = ('=username',)
+    search_fields = ('username',)
     lookup_field = 'username'
 
     @action(
@@ -114,7 +121,12 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = UserSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
+    # def get_queryset(self):
+    #     queryset = User.objects.all()
+    #     username = self.kwargs.get('username')
+    #     # if username:
+    #     queryset = queryset.filter(username=username)
+    #     return queryset
 @api_view(['POST'])
 def signup_new_user(request):
     username = request.data.get('username')
