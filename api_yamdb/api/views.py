@@ -1,12 +1,20 @@
+from django.core.mail import EmailMessage
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
-from rest_framework import filters, mixins, permissions, viewsets
+from rest_framework import filters, mixins, permissions, viewsets, status
+from rest_framework.decorators import action
+from rest_framework.filters import SearchFilter
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from reviews.models import Category, Genre, MyUser, Title
 
-from .permissions import IsAuthorOrReadOnly, UserRolePermissions, RolePermissions
+from .permissions import (AdminModeratorAuthorPermission, AdminOnly,
+                          IsAdminUserOrReadOnly, IsAuthorOrReadOnly,
+                          RolePermissions, UserRolePermissions)
 from .serializers import (CategorySerializer, CustomUserSerializer,
-                          GenreSerializer, TitleSerializer)
+                          GenreSerializer, TitleSerializer, NotAdminSerializer, SignUpSerializer)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -28,8 +36,85 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
 
 class MyUserViewSet(UserViewSet):
-    model = MyUser
+    queryset = MyUser.objects.all()
     serializer_class = CustomUserSerializer
+    permission_classes = (IsAuthenticated, AdminOnly,)
     lookup_field = 'username'
-    permission_classes = [UserRolePermissions,]
-    # lookup_field = 'username'  # ещё есть lookup_url_kwarg = 'username'
+    # filter_backends = (SearchFilter, )
+    # search_fields = ('username', )
+
+    @action(
+        # methods=['GET', 'PATCH'],
+        methods=['GET', 'PATCH', 'POST', 'DELETE'],
+        detail=False,
+        permission_classes=(IsAuthenticated,),
+        url_path='me')
+    def get_current_user_info(self, request):
+        serializer = CustomUserSerializer(request.user)
+        if request.method == 'PATCH':
+            if request.user.is_admin:
+                serializer = CustomUserSerializer(
+                    request.user,
+                    data=request.data,
+                    partial=True)
+            else:
+                serializer = NotAdminSerializer(
+                    request.user,
+                    data=request.data,
+                    partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data)
+
+
+class APISignup(APIView):
+    """
+    Получить код подтверждения на переданный email. Права доступа: Доступно без
+    токена. Использовать имя 'me' в качестве username запрещено. Поля email и
+    username должны быть уникальными. Пример тела запроса:
+    {
+        "email": "string",
+        "username": "string"
+    }
+    """
+    permission_classes = (permissions.AllowAny,)
+
+    @staticmethod
+    def send_email(username, confirmation_code, email):
+        email = EmailMessage(
+            subject='Код подтвержения для доступа к API!',
+            body=(
+                    f'Доброе время суток, {username}.'
+                    '\nКод подтвержения для доступа к API:'
+                    f'\n{confirmation_code}'
+            ),
+            to=(email,)
+        )
+        email.send()
+
+    def post(self, request):
+        username = request.data.get('username')
+        if not MyUser.objects.filter(username=username).exists():
+            serializer = SignUpSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            if serializer.validated_data['username'] != 'me':
+                user = serializer.save()
+                self.send_email(
+                    user.username, user.confirmation_code, user.email)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(
+                'Username указан невено!', status=status.HTTP_400_BAD_REQUEST
+            )
+        user = get_object_or_404(MyUser, username=username)
+        serializer = SignUpSerializer(
+            user, data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        if serializer.validated_data['email'] == user.email:
+            user = serializer.save()
+            self.send_email(user.username, user.confirmation_code, user.email)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(
+            'Почта указана неверно!', status=status.HTTP_400_BAD_REQUEST
+        )

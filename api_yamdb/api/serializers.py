@@ -68,6 +68,14 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):  # не готов
 
 
 class CustomUserSerializer(UserSerializer):
+    class Meta:
+        model = MyUser
+        fields = (
+            'username', 'email', 'first_name',
+            'last_name', 'bio', 'role')
+
+
+"""class CustomUserSerializer(UserSerializer):
     username = serializers.SlugRelatedField(
         slug_field='username',
         queryset=MyUser.objects.all(),
@@ -78,15 +86,20 @@ class CustomUserSerializer(UserSerializer):
 
     class Meta:
         model = MyUser
-        fields = '__all__'
+        fields = '__all__'"""
 
-    def get_slug(self, obj):
-        return slugify(obj.username)
 
-    """def to_representation(self, obj):
-        return getattr(obj, self.slug_field)"""
+class NotAdminSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MyUser
+        fields = (
+            'username', 'email', 'first_name',
+            'last_name', 'bio', 'role')
+        read_only_fields = ('role',)
 
-    def validate(self, data):
-        if len(data['username']) or len(data['first_name']) > 150:
-            raise serializers.ValidationError('name too long')
-        return data
+
+class SignUpSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = MyUser
+        fields = ('email', 'username')
