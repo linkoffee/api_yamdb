@@ -1,11 +1,10 @@
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator, MaxValueValidator
-from django.db import models
-
-from .constants import MAX_NAME_LENGTH, MAX_SLUG_LENGTH, CHAR_OUTPUT_LIMIT
-
 from django.contrib.auth.models import AbstractUser
 from django.core import validators
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
+
+from .constants import CHAR_OUTPUT_LIMIT, MAX_NAME_LENGTH, MAX_SLUG_LENGTH
 
 
 class MyUser(AbstractUser):
