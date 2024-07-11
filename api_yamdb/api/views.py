@@ -2,14 +2,14 @@ from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
 from rest_framework import filters, mixins, permissions, viewsets
 from rest_framework.pagination import PageNumberPagination
-from reviews.models import Category, Genre, MyUser, Title, Review, User
+from reviews.models import Category, Genre, MyUser, Title, Review, User, Comment
 
 
 from rest_framework import viewsets
 from rest_framework.generics import get_object_or_404
 from .serializers import (CategorySerializer, GenreSerializer,
                           CustomUserSerializer, TitleSerializer,
-                          ReviewSerializer)
+                          ReviewSerializer, CommentSerializer)
 # from .permissions import IsAdminOrReadOnly
 
 
@@ -38,7 +38,10 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
+    """Viewset модели отзывов."""
     serializer_class = ReviewSerializer
+    http_method_names = ['get', 'post', 'patch', 'delete']
+    # permission_classes =
 
     def get_queryset(self):
         """Получаем отзывы к конкретному произведению."""
@@ -49,6 +52,20 @@ class ReviewViewSet(viewsets.ModelViewSet):
         """Добавляем авторизованного пользователя к отзыву."""
         title = get_object_or_404(Title, pk=self.kwargs['title_id'])
         serializer.save(author=self.request.user, title=title)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    serializer = CommentSerializer
+
+    def get_queryset(self):
+        """Получаем комментарии к конкретному отзыву."""
+        review = get_object_or_404(Review, pk=self.kwargs['review_id'])
+        return Comment.objects.filter(review=review)
+
+    def perform_create(self, serializer):
+        """Добавляем авторизованного пользователя к комментарию."""
+        review = get_object_or_404(Review, pk=self.kwargs['review_id'])
+        serializer.save(author=self.request.user, review=review)
 
 
 class MyUserViewSet(UserViewSet):
