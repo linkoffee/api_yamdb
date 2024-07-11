@@ -77,6 +77,17 @@ class ReviewSerializer(serializers.ModelSerializer):
         #         fields=('author', 'id')
         #     )
         # ]
+    def validate(self, attrs):
+        request = self.context['request']
+        title = get_object_or_404(
+            Title,
+            id=self.context['request'].parser_context['kwargs']['title_id']
+        )
+        if request.method == 'POST':
+            if Review.objects.filter(author=self.context['request'].user,
+                                     title=title).exists():
+                raise serializers.ValidationError('Отзыв уже оставлен')
+        return attrs
 
 class GetTokenSerializer(serializers.ModelSerializer):
     username = serializers.CharField(

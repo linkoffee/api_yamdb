@@ -209,19 +209,21 @@ class Review(models.Model):
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
+        db_index=True,
         related_name='reviews',
         verbose_name='Наименование произведения'
     )
 
     class Meta:
         ordering = ('-pub_date',)
-        constraints = (
-            models.UniqueConstraint(
-                fields=('title', 'author'),
-                name='unique_title_and_author'),
-        )
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['author', 'title'],
+                name='unique_author_title'
+            )
+        ]
 
     def __str__(self):
         return self.text[:CHAR_OUTPUT_LIMIT]
