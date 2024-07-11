@@ -1,20 +1,20 @@
 from django.core.mail import EmailMessage
 from django.shortcuts import get_object_or_404
-from djoser.views import UserViewSet
-from rest_framework import filters, mixins, permissions, viewsets, status
+from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
-from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from reviews.models import Category, Genre, MyUser, Title
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .permissions import (AdminModeratorAuthorPermission, AdminOnly,
-                          IsAdminUserOrReadOnly, IsAuthorOrReadOnly,
-                          RolePermissions, UserRolePermissions)
+from reviews.models import Category, Genre, MyUser, Title
+from .permissions import IsAdminOrStaffPermission, IsUserForSelfPermission
 from .serializers import (CategorySerializer, CustomUserSerializer,
-                          GenreSerializer, TitleSerializer, NotAdminSerializer, SignUpSerializer)
+                          GenreSerializer, GetTokenSerializer,
+                          NotAdminSerializer, SignUpSerializer,
+                          TitleSerializer)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -35,19 +35,24 @@ class CategoryViewSet(viewsets.ModelViewSet):
     permission_classes = ...  # Настройки доступа не настроены.
 
 
-class MyUserViewSet(UserViewSet):
+class MyUserViewSet(viewsets.ModelViewSet):
+    """
+    Управляет адресами, начинающимися с users/. Права доступа:
+    различаются в зависимости от пользовательских ролей.
+    По адресу users/me доступна информация о собственном профиле
+    """
     queryset = MyUser.objects.all()
     serializer_class = CustomUserSerializer
-    permission_classes = (IsAuthenticated, AdminOnly,)
+    permission_classes = (IsAdminOrStaffPermission,)
     lookup_field = 'username'
-    # filter_backends = (SearchFilter, )
-    # search_fields = ('username', )
+    http_method_names = ['get', 'post', 'patch', 'delete']
+    filter_backends = (SearchFilter, )
+    search_fields = ('username', )
 
     @action(
-        # methods=['GET', 'PATCH'],
-        methods=['GET', 'PATCH', 'POST', 'DELETE'],
+        methods=['GET', 'PATCH', 'POST',],
         detail=False,
-        permission_classes=(IsAuthenticated,),
+        permission_classes=(IsUserForSelfPermission, IsAuthenticated),
         url_path='me')
     def get_current_user_info(self, request):
         serializer = CustomUserSerializer(request.user)
@@ -72,11 +77,7 @@ class APISignup(APIView):
     """
     Получить код подтверждения на переданный email. Права доступа: Доступно без
     токена. Использовать имя 'me' в качестве username запрещено. Поля email и
-    username должны быть уникальными. Пример тела запроса:
-    {
-        "email": "string",
-        "username": "string"
-    }
+    username должны быть уникальными.
     """
     permission_classes = (permissions.AllowAny,)
 
@@ -118,3 +119,28 @@ class APISignup(APIView):
         return Response(
             'Почта указана неверно!', status=status.HTTP_400_BAD_REQUEST
         )
+
+
+class MyTokenObtainView(TokenObtainPairView):
+    """
+    Получение JWT-токена в обмен на username и confirmation code.
+    Права доступа: Доступно без токена.
+    """
+
+    def post(self, request):
+        serializer = GetTokenSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        try:
+            user = MyUser.objects.get(username=data['username'])
+        except MyUser.DoesNotExist:
+            return Response(
+                {'username': 'Пользователь не найден!'},
+                status=status.HTTP_404_NOT_FOUND)
+        if data.get('confirmation_code') == user.confirmation_code:
+            token = RefreshToken.for_user(user).access_token
+            return Response({'token': str(token)},
+                            status=status.HTTP_201_CREATED)
+        return Response(
+            {'confirmation_code': 'Неверный код подтверждения!'},
+            status=status.HTTP_400_BAD_REQUEST)
