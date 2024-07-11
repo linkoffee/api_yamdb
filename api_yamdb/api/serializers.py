@@ -1,4 +1,3 @@
-from djoser.serializers import UserSerializer
 from rest_framework import serializers
 from reviews.models import Category, Genre, MyUser, Review, Title
 
@@ -48,6 +47,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class GetTokenSerializer(serializers.ModelSerializer):
+    """Сериализатор для получения пользователем JWT-токена."""
     username = serializers.CharField(
         required=True)
     confirmation_code = serializers.CharField(
@@ -61,7 +61,8 @@ class GetTokenSerializer(serializers.ModelSerializer):
         )
 
 
-class CustomUserSerializer(UserSerializer):
+class CustomUserSerializer(serializers.ModelSerializer):
+    """Сериализатор под нужды администратора."""
     class Meta:
         model = MyUser
         fields = (
@@ -70,6 +71,7 @@ class CustomUserSerializer(UserSerializer):
 
 
 class NotAdminSerializer(serializers.ModelSerializer):
+    """Сериализатор для остальных пользователей."""
     class Meta:
         model = MyUser
         fields = (
@@ -79,7 +81,7 @@ class NotAdminSerializer(serializers.ModelSerializer):
 
 
 class SignUpSerializer(serializers.ModelSerializer):
-
+    """Сериализатор для регистрации."""
     class Meta:
         model = MyUser
         fields = ('email', 'username')

@@ -22,7 +22,7 @@ ROLE_CHOICES = [
 
 
 class MyUser(AbstractUser):
-
+    """Модель пользователя."""
     role = models.CharField(
         max_length=9,
         choices=ROLE_CHOICES,
