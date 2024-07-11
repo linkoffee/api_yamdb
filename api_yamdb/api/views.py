@@ -11,14 +11,14 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from reviews.models import Category, Genre, MyUser, Review, Title
+from reviews.models import Category, Comment, Genre, MyUser, Review, Title
 from .permissions import (IsAdminOrStaffPermission, IsAdminOrReadOnly,
                           IsUserForSelfPermission)
-from .serializers import (CategorySerializer, CustomUserSerializer,
-                          GenreSerializer, GetTokenSerializer,
-                          NotAdminSerializer, ReviewSerializer,
-                          SignUpSerializer, TitleSerializerForRead,
-                          TitleSerializerForWrite)
+from .serializers import (CategorySerializer, CommentSerializer,
+                          CustomUserSerializer, GenreSerializer,
+                          GetTokenSerializer, NotAdminSerializer,
+                          ReviewSerializer, SignUpSerializer,
+                          TitleSerializerForRead, TitleSerializerForWrite,)
 from .filters import TitleFilter
 
 
@@ -191,3 +191,19 @@ class MyTokenObtainView(TokenObtainPairView):
         return Response(
             {'confirmation_code': 'Неверный код подтверждения!'},
             status=status.HTTP_400_BAD_REQUEST)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    model = Comment
+    serializer_class = CommentSerializer
+
+    def get_queryset(self):
+        """Получаем комментарии к конкретному отзыву."""
+        review = get_object_or_404(Review, pk=self.kwargs['review_id'])
+        return Comment.objects.filter(review=review)
+
+    def perform_create(self, serializer):
+        """Присваиваем автора комментарию."""
+        review = get_object_or_404(Review, pk=self.kwargs['review_id'])
+        serializer.save(author=self.request.user, review=review)
+

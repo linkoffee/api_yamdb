@@ -1,6 +1,6 @@
 from djoser.serializers import UserSerializer
 from rest_framework import serializers
-from reviews.models import Category, Genre, MyUser, Review, Title
+from reviews.models import Category, Comment, Genre, MyUser, Review, Title
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -51,7 +51,6 @@ class TitleSerializerForWrite(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериализатор данных модели отзывов."""
-
     author = serializers.SlugRelatedField(read_only=True,
                                           slug_field='username')
 
@@ -96,3 +95,11 @@ class SignUpSerializer(serializers.ModelSerializer):
     class Meta:
         model = MyUser
         fields = ('email', 'username')
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    """Сериализатор данных модели комментариев."""
+    class Meta:
+        model = Comment
+        fields = ('id', 'text', 'author', 'pub_date',)
+

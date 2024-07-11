@@ -211,3 +211,20 @@ class Review(models.Model):
 
     def __str__(self):
         return self.text[:CHAR_OUTPUT_LIMIT]
+
+
+class Comment(models.Model):
+    text = models.TextField()
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='comments'
+    )
+    pub_date = models.DateTimeField(auto_now_add=True)
+    review = models.ForeignKey(
+        Review, on_delete=models.CASCADE, related_name='comments'
+    )
+
+    class Meta:
+        ordering = ('-pub_date',)
+
+    def __str__(self):
+        return self.text[:CHAR_OUTPUT_LIMIT]
