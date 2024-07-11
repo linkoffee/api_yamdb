@@ -1,10 +1,29 @@
 from djoser.serializers import UserSerializer
 from rest_framework import serializers
 
-from reviews.models import Category, Genre, MyUser, Title
+from reviews.models import Category, Genre, Title
+
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.validators import UniqueTogetherValidator
+from rest_framework import serializers
+from reviews.models import MyUser
+
+from djoser.serializers import UserSerializer
+from rest_framework_simplejwt.serializers import (
+    TokenObtainPairSerializer,
+    TokenObtainSerializer
+)
 
 
 class TitleSerializer(serializers.ModelSerializer):
+    """Сериализатор данных модели произведения."""
+
+    genre = serializers.SlugRelatedField(
+        queryset=Genre.objects.all(), slug_field='slug', many=True
+    )
+    category = serializers.SlugRelatedField(
+        queryset=Category.objects.all(), slug_field='slug'
+    )
 
     class Meta:
         model = Title
@@ -12,17 +31,32 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class GenreSerializer(serializers.ModelSerializer):
+    """Сериализатор данных модели жанра."""
 
     class Meta:
         model = Genre
-        fields = '__all__'
+        fields = ('name', 'slug')
+        lookup_field = 'slug'
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    """Сериализатор данных модели категории."""
 
     class Meta:
         model = Category
-        fields = '__all__'
+        fields = ('name', 'slug')
+        lookup_field = 'slug'
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    """Сериализатор данных модели отзывов."""
+
+    author = serializers.SlugRelatedField(read_only=True,
+                                          slug_field='username')
+
+    class Meta:
+        model = Review
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
 
 
 class GetTokenSerializer(serializers.ModelSerializer):

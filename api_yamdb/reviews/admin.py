@@ -8,11 +8,12 @@ admin.site.empty_value_display = 'Здесь пока ничего нет:('
 
 @admin.register(Title)
 class TitleAdmin(admin.ModelAdmin):
+    """Админ панель произведений."""
+
     list_display = (
         'name',
         'year',
         'description',
-        'genre',
         'category',
     )
     list_editable = (
@@ -31,6 +32,8 @@ class TitleAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
+    """Админ панель категорий."""
+
     list_display = (
         'name',
         'slug',
@@ -49,6 +52,8 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Genre)
 class GenreAdmin(admin.ModelAdmin):
+    """Админ панель жанров."""
+
     list_display = (
         'name',
         'slug',
@@ -65,6 +70,7 @@ class GenreAdmin(admin.ModelAdmin):
     )
 
 
+"""Админ панель пользователя."""
 UserAdmin.fieldsets += (
     ('Extra Fields', {'fields': ('role',)}),
 )
