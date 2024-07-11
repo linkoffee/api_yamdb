@@ -1,18 +1,6 @@
 from djoser.serializers import UserSerializer
 from rest_framework import serializers
-
-from reviews.models import Category, Genre, Title
-
-from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework.validators import UniqueTogetherValidator
-from rest_framework import serializers
-from reviews.models import MyUser
-
-from djoser.serializers import UserSerializer
-from rest_framework_simplejwt.serializers import (
-    TokenObtainPairSerializer,
-    TokenObtainSerializer
-)
+from reviews.models import Category, Genre, MyUser, Review, Title
 
 
 class TitleSerializer(serializers.ModelSerializer):

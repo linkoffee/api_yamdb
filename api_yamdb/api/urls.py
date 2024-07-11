@@ -1,5 +1,5 @@
 from django.urls import include, path
-from rest_framework.routers import DefaultRouter, SimpleRouter
+from rest_framework.routers import DefaultRouter
 
 from .views import (APISignup, CategoryViewSet, GenreViewSet,
                     MyTokenObtainView, MyUserViewSet, ReviewViewSet,
@@ -18,17 +18,10 @@ router.register(
 router.register(
     r'^titles/(?P<title_id>\d+)/reviews', ReviewViewSet, basename='reviews'
 )
+router.register('users', MyUserViewSet, basename='users')
 
-
-user_router = SimpleRouter()
-user_router.register(
-    'users',
-    MyUserViewSet,
-    basename='users'
-)
 urlpatterns = [
     path('v1/', include(router.urls)),
-    path('v1/', include(user_router.urls)),
     path('v1/auth/signup/', APISignup.as_view(), name='signup'),
     path(
         'v1/auth/token/',

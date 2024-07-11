@@ -31,7 +31,7 @@ class IsAuthorOrModerPermission(permissions.BasePermission):
         )
 
 
-class AdminOrReadOnly(permissions.BasePermission):
+class IsAdminOrReadOnly(permissions.BasePermission):
 
     def has_permission(self, request, view):
         return (
@@ -48,8 +48,6 @@ class AdminOrReadOnly(permissions.BasePermission):
                 request.user.is_authenticated
                 and request.user.is_admin)
         )
-# from rest_framework import permissions
-
 
 # class IsAdminOrReadOnly(permissions.BasePermission):
 

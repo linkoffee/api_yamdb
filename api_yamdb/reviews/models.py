@@ -1,22 +1,14 @@
-from .validators import username_validator
-from .constants import CHAR_OUTPUT_LIMIT, MAX_NAME_LENGTH, MAX_SLUG_LENGTH
-from django.dispatch import receiver
-from django.db.models.signals import post_save
-from django.core.validators import MinValueValidator, MaxValueValidator
-from django.contrib.auth.tokens import default_token_generator
-from django.contrib.auth.models import AbstractUser
 from django.contrib.auth import get_user_model
-
-from .constants import MAX_NAME_LENGTH, MAX_SLUG_LENGTH, CHAR_OUTPUT_LIMIT
-
+from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.tokens import default_token_generator
+from django.core.validators import (MaxValueValidator, MinValueValidator,
+                                    RegexValidator)
 from django.db import models
-<< << << < HEAD
-== == == =
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
-
->>>>>> > develop
-<< << << < HEAD
-
+from .constants import CHAR_OUTPUT_LIMIT, MAX_NAME_LENGTH, MAX_SLUG_LENGTH
+from .validators import username_validator
 
 USER = 'user'
 ADMIN = 'admin'
@@ -48,37 +40,13 @@ class MyUser(AbstractUser):
         verbose_name='Электронная почта'
     )
 
-
-== == == =
-
-
-class MyUser(AbstractUser):
-    """Пользовательская модель юзера."""
-    ROLE_CHOICES = [
-        ('U', 'User'),
-        ('M', 'Moderator'),
-        ('A', 'Admin'),
-    ]
-
-    role = models.CharField(
-        max_length=1,
-        choices=ROLE_CHOICES,
-        default='U'
-    )
-
-    bio = models.TextField(default='Пусто')
-
-
->>>>>> > develop
-
     username = models.CharField(
         max_length=150,
         unique=True,
-<< << << < HEAD
         blank=False,
         null=False,
         validators=[
-            validators.RegexValidator(
+            RegexValidator(
                 regex=r'^[\w.@+-]+\Z',
                 message='Недопустимые символы в username',
             ),
@@ -131,20 +99,6 @@ def post_save(sender, instance, created, **kwargs):
         instance.save()
 
 
-class Category(models.Model):
-    name = models.CharField(max_length=MAX_NAME_LENGTH)
-    slug = models.SlugField(unique=True, max_length=MAX_SLUG_LENGTH)
-
-
-== == == =
-        validators = [validators.RegexValidator(
-            regex='^[\w.@+-]+\Z',
-            message='Недопустимые символы в username',
-        ),
-        ]
-    )
-
-
 User = get_user_model()
 
 
@@ -163,7 +117,6 @@ class Category(models.Model):
     class Meta:
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
->>>>>>> develop
 
     def __str__(self):
         return self.name[:CHAR_OUTPUT_LIMIT]
