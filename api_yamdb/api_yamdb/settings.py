@@ -1,4 +1,4 @@
-"""Django settings for YaMDb project."""
+import os
 
 from datetime import timedelta
 from pathlib import Path
@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework_simplejwt',
     'djoser',
     'reviews.apps.ReviewsConfig',
     'api.apps.ApiConfig'
@@ -112,6 +113,10 @@ STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
 AUTH_USER_MODEL = 'reviews.MyUser'
 
 REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ],
+
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
@@ -127,6 +132,7 @@ DJOSER = {
     'ACCOUNT_ACTIVATION_URL': 'http://127.0.0.1:8000/api/v1/auth/signup/',
     'SEND_ACTIVATION_EMAIL': True,
     'SERIALIZERS': {
+        # 'user_create': 'djoser.serializers.UserCreateSerializer'
         'user_create': 'djoser.serializers.UserCreateSerializer',
         'user': 'api.serializers.CustomUserSerializer',
     },
@@ -171,3 +177,9 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainSlidingSerializer",
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
+
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+
+EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
+
+EMAIL_ADMIN = 'Admin@admin.com'

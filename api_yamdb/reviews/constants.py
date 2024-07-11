@@ -6,3 +6,13 @@ MAX_SLUG_LENGTH = 50
 
 # Ограничитель на кол-во выводимых символов в заголовке:
 CHAR_OUTPUT_LIMIT = 20
+
+USER = 'user'
+ADMIN = 'admin'
+MODERATOR = 'moderator'
+
+ROLE_CHOICES = [
+    (USER, USER),
+    (ADMIN, ADMIN),
+    (MODERATOR, MODERATOR),
+]
