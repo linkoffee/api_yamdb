@@ -1,5 +1,7 @@
+from django.shortcuts import get_object_or_404
 from djoser.serializers import UserSerializer
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 from reviews.models import Category, Comment, Genre, MyUser, Review, Title
 
 
@@ -48,16 +50,33 @@ class TitleSerializerForWrite(serializers.ModelSerializer):
         model = Title
         fields = '__all__'
 
+class CurrentTitleDefault:
+    requires_context = True
+
+    def __call__(self, serializer_field):
+        title_id = serializer_field.context['view'].kwargs.get('title_id')
+        return get_object_or_404(Title, id=title_id)
+
+    def __repr__(self):
+        return '%s()' % self.__class__.__name__
 
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериализатор данных модели отзывов."""
-    author = serializers.SlugRelatedField(read_only=True,
-                                          slug_field='username')
-
+    author = serializers.SlugRelatedField(
+        default=serializers.CurrentUserDefault(),
+        read_only=True,
+        slug_field='username'
+    )
+    # title = serializers.HiddenField(default=CurrentTitleDefault())
     class Meta:
         model = Review
         fields = ('id', 'text', 'author', 'score', 'pub_date')
-
+        # validators = [
+        #     UniqueTogetherValidator(
+        #         queryset=Review.objects.all(),
+        #         fields=('author', 'id')
+        #     )
+        # ]
 
 class GetTokenSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
@@ -99,6 +118,8 @@ class SignUpSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     """Сериализатор данных модели комментариев."""
+    author = serializers.SlugRelatedField(read_only=True,
+                                          slug_field='username')
     class Meta:
         model = Comment
         fields = ('id', 'text', 'author', 'pub_date',)

@@ -13,7 +13,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from reviews.models import Category, Comment, Genre, MyUser, Review, Title
 from .permissions import (IsAdminOrStaffPermission, IsAdminOrReadOnly,
-                          IsUserForSelfPermission)
+                          IsUserForSelfPermission, IsAuthorOrModerPermission)
 from .serializers import (CategorySerializer, CommentSerializer,
                           CustomUserSerializer, GenreSerializer,
                           GetTokenSerializer, NotAdminSerializer,
@@ -72,7 +72,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """Viewset модели отзывов."""
     serializer_class = ReviewSerializer
     http_method_names = ['get', 'post', 'patch', 'delete']
-    # permission_classes =
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,
+                          IsAuthorOrModerPermission,)
 
     def get_queryset(self):
         """Получаем отзывы к конкретному произведению."""
@@ -83,22 +84,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
         """Добавляем авторизованного пользователя к отзыву."""
         title = get_object_or_404(Title, pk=self.kwargs['title_id'])
         serializer.save(author=self.request.user, title=title)
-
-
-class CommentViewSet(viewsets.ModelViewSet):
-    serializer = CommentSerializer
-
-    def get_queryset(self):
-        """Получаем комментарии к конкретному отзыву."""
-        review = get_object_or_404(Review, pk=self.kwargs['review_id'])
-        return Comment.objects.filter(review=review)
-
-    def perform_create(self, serializer):
-        """Добавляем авторизованного пользователя к комментарию."""
-        review = get_object_or_404(Review, pk=self.kwargs['review_id'])
-        serializer.save(author=self.request.user, review=review)
-
-
 
 
 class MyUserViewSet(viewsets.ModelViewSet):
@@ -213,8 +198,10 @@ class MyTokenObtainView(TokenObtainPairView):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    model = Comment
     serializer_class = CommentSerializer
+    http_method_names = ['get', 'post', 'patch', 'delete']
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,
+                          IsAuthorOrModerPermission,)
 
     def get_queryset(self):
         """Получаем комментарии к конкретному отзыву."""
@@ -225,4 +212,18 @@ class CommentViewSet(viewsets.ModelViewSet):
         """Присваиваем автора комментарию."""
         review = get_object_or_404(Review, pk=self.kwargs['review_id'])
         serializer.save(author=self.request.user, review=review)
+
+    # def perform_update(self, serializer):
+    #     """Обновляем комментарий только автору."""
+    #     comment = get_object_or_404(Comment, pk=self.kwargs['pk'])
+    #     if comment.author == self.request.user:
+    #         serializer.save()
+    #     else:
+    #         return Response(status=status.HTTP_403_FORBIDDEN)
+    # def perform_update(self, serialiser):
+    #     review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
+    #     comment_id = self.kwargs.get('pk')
+    #     author = Comment.objects.get(pk=comment_id).author
+    #     # if author == self.request.user:
+    #     serialiser.save(author=author, review_id=review.id)
 
