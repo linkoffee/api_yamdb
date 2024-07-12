@@ -23,6 +23,8 @@ from .filters import TitleFilter
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    """Viewset модели произведения."""
+
     queryset = Title.objects.all()
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
@@ -46,6 +48,8 @@ class GenreViewSet(mixins.CreateModelMixin,
                    mixins.ListModelMixin,
                    mixins.DestroyModelMixin,
                    viewsets.GenericViewSet):
+    """Viewset модели жанра."""
+
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     pagination_class = PageNumberPagination
@@ -59,6 +63,8 @@ class CategoryViewSet(mixins.CreateModelMixin,
                       mixins.ListModelMixin,
                       mixins.DestroyModelMixin,
                       viewsets.GenericViewSet):
+    """Viewset модели категории."""
+
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     pagination_class = PageNumberPagination
@@ -70,6 +76,7 @@ class CategoryViewSet(mixins.CreateModelMixin,
 
 class ReviewViewSet(viewsets.ModelViewSet):
     """Viewset модели отзывов."""
+
     serializer_class = ReviewSerializer
     http_method_names = ['get', 'post', 'patch', 'delete']
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,
@@ -92,6 +99,7 @@ class MyUserViewSet(viewsets.ModelViewSet):
     различаются в зависимости от пользовательских ролей.
     По адресу users/me доступна информация о собственном профиле
     """
+
     queryset = MyUser.objects.all()
     serializer_class = CustomUserSerializer
     permission_classes = (IsAdminOrStaffPermission,)
@@ -130,6 +138,7 @@ class APISignup(APIView):
     токена. Использовать имя 'me' в качестве username запрещено. Поля email и
     username должны быть уникальными.
     """
+
     permission_classes = (permissions.AllowAny,)
 
     @staticmethod
@@ -226,4 +235,3 @@ class CommentViewSet(viewsets.ModelViewSet):
     #     author = Comment.objects.get(pk=comment_id).author
     #     # if author == self.request.user:
     #     serialiser.save(author=author, review_id=review.id)
-

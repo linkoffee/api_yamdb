@@ -36,7 +36,7 @@ class TitleSerializerForRead(serializers.ModelSerializer):
 
     def get_rating(self, obj):
         scores = Review.objects.filter(title_id=obj).values_list('score',
-                                                                    flat=True)
+                                                                 flat=True)
         if not scores:
             return None
         rating_sum = sum(scores)
@@ -45,6 +45,7 @@ class TitleSerializerForRead(serializers.ModelSerializer):
 
 class TitleSerializerForWrite(serializers.ModelSerializer):
     """Сериализатор данных модели произведения для записи."""
+
     category = serializers.SlugRelatedField(
         queryset=Category.objects.all(),
         slug_field='slug'
@@ -59,7 +60,9 @@ class TitleSerializerForWrite(serializers.ModelSerializer):
         model = Title
         fields = '__all__'
 
+
 class CurrentTitleDefault:
+
     requires_context = True
 
     def __call__(self, serializer_field):
@@ -69,14 +72,17 @@ class CurrentTitleDefault:
     def __repr__(self):
         return '%s()' % self.__class__.__name__
 
+
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериализатор данных модели отзывов."""
+
     author = serializers.SlugRelatedField(
         default=serializers.CurrentUserDefault(),
         read_only=True,
         slug_field='username'
     )
     # title = serializers.HiddenField(default=CurrentTitleDefault())
+
     class Meta:
         model = Review
         fields = ('id', 'text', 'author', 'score', 'pub_date')
@@ -86,6 +92,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         #         fields=('author', 'id')
         #     )
         # ]
+
     def validate(self, attrs):
         request = self.context['request']
         title = get_object_or_404(
@@ -98,7 +105,9 @@ class ReviewSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError('Отзыв уже оставлен')
         return attrs
 
+
 class GetTokenSerializer(serializers.ModelSerializer):
+
     username = serializers.CharField(
         required=True)
     confirmation_code = serializers.CharField(
@@ -113,6 +122,7 @@ class GetTokenSerializer(serializers.ModelSerializer):
 
 
 class CustomUserSerializer(UserSerializer):
+
     class Meta:
         model = MyUser
         fields = (
@@ -121,6 +131,7 @@ class CustomUserSerializer(UserSerializer):
 
 
 class NotAdminSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = MyUser
         fields = (
@@ -138,9 +149,10 @@ class SignUpSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     """Сериализатор данных модели комментариев."""
+
     author = serializers.SlugRelatedField(read_only=True,
                                           slug_field='username')
+
     class Meta:
         model = Comment
         fields = ('id', 'text', 'author', 'pub_date',)
-
