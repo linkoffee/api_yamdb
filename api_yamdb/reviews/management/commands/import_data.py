@@ -14,13 +14,15 @@ DIR_PATH = 'static/data'
 CONFIG_FILE = 'json/import_data_config.json'
 
 # Настройка логирования:
+log_file_path = os.path.join(os.path.dirname(__file__), 'import_data.log')
+
 logging.basicConfig(
     level=logging.INFO,
     format=(
         '[%(asctime)s][%(levelname)s][%(message)s][%(filename)s][%(lineno)s]'
     ),
     handlers=[
-        logging.FileHandler('import_data_debug.log'),
+        logging.FileHandler(log_file_path),
         logging.StreamHandler()
     ]
 )

@@ -51,5 +51,14 @@
             "last_name": "last_name",
             "unique_field": "id"
         }
+    },
+    "genre_title": {
+        "model": "GenreTitle",
+        "fields_mapping": {
+            "id": "id",
+            "title_id": "title_id",
+            "genre_id": "genre_id",
+            "unique_field": "id"
+        }
     }
 }

@@ -1,6 +1,7 @@
 from django.core.mail import EmailMessage
 from django.shortcuts import get_object_or_404
-from rest_framework import filters, permissions, status, viewsets
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, permissions, status, viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
@@ -10,40 +11,76 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from reviews.models import Category, Genre, MyUser, Review, Title
-from .permissions import IsAdminOrStaffPermission, IsUserForSelfPermission
-from .serializers import (CategorySerializer, CustomUserSerializer,
-                          GenreSerializer, GetTokenSerializer,
-                          NotAdminSerializer, ReviewSerializer,
-                          SignUpSerializer, TitleSerializer)
+from reviews.models import Category, Comment, Genre, MyUser, Review, Title
+from .permissions import (IsAdminOrStaffPermission, IsAdminOrReadOnly,
+                          IsUserForSelfPermission, IsAuthorOrModerPermission)
+from .serializers import (CategorySerializer, CommentSerializer,
+                          CustomUserSerializer, GenreSerializer,
+                          GetTokenSerializer, NotAdminSerializer,
+                          ReviewSerializer, SignUpSerializer,
+                          TitleSerializerForRead, TitleSerializerForWrite,)
+from .filters import TitleFilter
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    """Viewset модели произведения."""
+
     queryset = Title.objects.all()
-    serializer_class = TitleSerializer
-    # permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleFilter
+
+    def update(self, request, *args, **kwargs):
+        if request.method == 'PUT':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        return super().partial_update(request, *args, **kwargs)
+
+    def get_serializer_class(self):
+        if self.action in ('create', 'partial_update'):
+            return TitleSerializerForWrite
+        return TitleSerializerForRead
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(mixins.CreateModelMixin,
+                   mixins.ListModelMixin,
+                   mixins.DestroyModelMixin,
+                   viewsets.GenericViewSet):
+    """Viewset модели жанра."""
+
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     pagination_class = PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
-    # permission_classes = (IsAdminOrReadOnly,)
+    lookup_field = 'slug'
+    permission_classes = (IsAdminOrReadOnly,)
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(mixins.CreateModelMixin,
+                      mixins.ListModelMixin,
+                      mixins.DestroyModelMixin,
+                      viewsets.GenericViewSet):
+    """Viewset модели категории."""
+
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     pagination_class = PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
-    # permission_classes = (IsAdminOrReadOnly,)
+    lookup_field = 'slug'
+    permission_classes = (IsAdminOrReadOnly,)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
+    """Viewset модели отзывов."""
+
     serializer_class = ReviewSerializer
+    http_method_names = ['get', 'post', 'patch', 'delete']
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,
+                          IsAuthorOrModerPermission,)
 
     def get_queryset(self):
         """Получаем отзывы к конкретному произведению."""
@@ -62,6 +99,7 @@ class MyUserViewSet(viewsets.ModelViewSet):
     различаются в зависимости от пользовательских ролей.
     По адресу users/me доступна информация о собственном профиле.
     """
+
     queryset = MyUser.objects.all()
     serializer_class = CustomUserSerializer
     permission_classes = (IsAdminOrStaffPermission,)
@@ -100,6 +138,7 @@ class APISignup(APIView):
     токена. Использовать имя 'me' в качестве username запрещено. Поля email и
     username должны быть уникальными.
     """
+
     permission_classes = (permissions.AllowAny,)
 
     @staticmethod
@@ -165,3 +204,34 @@ class MyTokenObtainView(TokenObtainPairView):
         return Response(
             {'confirmation_code': 'Неверный код подтверждения!'},
             status=status.HTTP_400_BAD_REQUEST)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
+    http_method_names = ['get', 'post', 'patch', 'delete']
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,
+                          IsAuthorOrModerPermission,)
+
+    def get_queryset(self):
+        """Получаем комментарии к конкретному отзыву."""
+        review = get_object_or_404(Review, pk=self.kwargs['review_id'])
+        return Comment.objects.filter(review=review)
+
+    def perform_create(self, serializer):
+        """Присваиваем автора комментарию."""
+        review = get_object_or_404(Review, pk=self.kwargs['review_id'])
+        serializer.save(author=self.request.user, review=review)
+
+    # def perform_update(self, serializer):
+    #     """Обновляем комментарий только автору."""
+    #     comment = get_object_or_404(Comment, pk=self.kwargs['pk'])
+    #     if comment.author == self.request.user:
+    #         serializer.save()
+    #     else:
+    #         return Response(status=status.HTTP_403_FORBIDDEN)
+    # def perform_update(self, serialiser):
+    #     review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
+    #     comment_id = self.kwargs.get('pk')
+    #     author = Comment.objects.get(pk=comment_id).author
+    #     # if author == self.request.user:
+    #     serialiser.save(author=author, review_id=review.id)
