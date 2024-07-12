@@ -56,7 +56,9 @@ def transform_row_to_data(row, fields_mapping, model):
             elif field_name == 'genre' and model == models.Title:
                 genres = [get_instance(models.Genre, genre_id)
                           for genre_id in value.split(',')]
-                data['genre'] = [genre for genre in genres if genre is not None]
+                data['genre'] = [
+                    genre for genre in genres if genre is not None
+                ]
             else:
                 data[field_name] = value
     return data
