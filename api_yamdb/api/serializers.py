@@ -1,7 +1,5 @@
 from django.shortcuts import get_object_or_404
-from djoser.serializers import UserSerializer
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
 from reviews.models import Category, Comment, Genre, MyUser, Review, Title
 
 
