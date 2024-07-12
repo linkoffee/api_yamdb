@@ -207,6 +207,8 @@ class MyTokenObtainView(TokenObtainPairView):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
+    """Viewset модели комментариев."""
+
     serializer_class = CommentSerializer
     http_method_names = ['get', 'post', 'patch', 'delete']
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,
@@ -221,17 +223,3 @@ class CommentViewSet(viewsets.ModelViewSet):
         """Присваиваем автора комментарию."""
         review = get_object_or_404(Review, pk=self.kwargs['review_id'])
         serializer.save(author=self.request.user, review=review)
-
-    # def perform_update(self, serializer):
-    #     """Обновляем комментарий только автору."""
-    #     comment = get_object_or_404(Comment, pk=self.kwargs['pk'])
-    #     if comment.author == self.request.user:
-    #         serializer.save()
-    #     else:
-    #         return Response(status=status.HTTP_403_FORBIDDEN)
-    # def perform_update(self, serialiser):
-    #     review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
-    #     comment_id = self.kwargs.get('pk')
-    #     author = Comment.objects.get(pk=comment_id).author
-    #     # if author == self.request.user:
-    #     serialiser.save(author=author, review_id=review.id)

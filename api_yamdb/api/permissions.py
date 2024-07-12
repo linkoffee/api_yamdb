@@ -2,12 +2,14 @@ from rest_framework import permissions
 
 
 class IsUserForSelfPermission(permissions.BasePermission):
+    """Разрешает доступ только аутентифицированным пользователям."""
 
     def has_permission(self, request, view):
         return request.user.is_authenticated
 
 
 class IsAdminOrStaffPermission(permissions.BasePermission):
+    """Разрешает доступ администраторам или уполномоченным сотрудникам."""
 
     def has_permission(self, request, view):
         return (
@@ -19,6 +21,10 @@ class IsAdminOrStaffPermission(permissions.BasePermission):
 
 
 class IsAuthorOrModerPermission(permissions.BasePermission):
+    """
+    Разрешает доступ авторам объектов или модераторам.
+    Позволяет безопасные методы всем пользователям.
+    """
 
     def has_object_permission(self, request, view, obj):
         return (
@@ -32,6 +38,10 @@ class IsAuthorOrModerPermission(permissions.BasePermission):
 
 
 class IsAdminOrReadOnly(permissions.BasePermission):
+    """
+    Разрешает полный доступ администраторам.
+    Позволяет только чтение другим пользователям.
+    """
 
     def has_permission(self, request, view):
         return (

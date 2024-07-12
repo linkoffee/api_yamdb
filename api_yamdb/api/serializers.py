@@ -33,8 +33,10 @@ class TitleSerializerForRead(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_rating(self, obj):
-        scores = Review.objects.filter(title_id=obj).values_list('score',
-                                                                 flat=True)
+        scores = Review.objects.filter(title_id=obj).values_list(
+            'score',
+            flat=True
+        )
         if not scores:
             return None
         rating_sum = sum(scores)
@@ -79,17 +81,10 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only=True,
         slug_field='username'
     )
-    # title = serializers.HiddenField(default=CurrentTitleDefault())
 
     class Meta:
         model = Review
         fields = ('id', 'text', 'author', 'score', 'pub_date')
-        # validators = [
-        #     UniqueTogetherValidator(
-        #         queryset=Review.objects.all(),
-        #         fields=('author', 'id')
-        #     )
-        # ]
 
     def validate(self, attrs):
         request = self.context['request']
@@ -106,6 +101,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 class GetTokenSerializer(serializers.ModelSerializer):
     """Сериализатор для получения пользователем JWT-токена."""
+
     username = serializers.CharField(
         required=True)
     confirmation_code = serializers.CharField(
@@ -121,6 +117,7 @@ class GetTokenSerializer(serializers.ModelSerializer):
 
 class CustomUserSerializer(serializers.ModelSerializer):
     """Сериализатор под нужды администратора."""
+
     class Meta:
         model = MyUser
         fields = (
@@ -130,6 +127,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
 class NotAdminSerializer(serializers.ModelSerializer):
     """Сериализатор для остальных пользователей."""
+
     class Meta:
         model = MyUser
         fields = (
@@ -140,6 +138,7 @@ class NotAdminSerializer(serializers.ModelSerializer):
 
 class SignUpSerializer(serializers.ModelSerializer):
     """Сериализатор для регистрации."""
+
     class Meta:
         model = MyUser
         fields = ('email', 'username')
