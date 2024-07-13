@@ -109,7 +109,7 @@ class CommentAdmin(admin.ModelAdmin):
     )
     search_fields = (
         'review',
-            )
+    )
     list_filter = (
         'review',
         'author',
