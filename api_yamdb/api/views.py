@@ -109,7 +109,7 @@ class MyUserViewSet(viewsets.ModelViewSet):
     search_fields = ('username', )
 
     @action(
-        methods=['GET', 'PATCH', 'POST',],
+        methods=['GET', 'PATCH', 'POST'],
         detail=False,
         permission_classes=(IsUserForSelfPermission, IsAuthenticated),
         url_path='me')
