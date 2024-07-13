@@ -189,12 +189,13 @@ class MyTokenObtainView(TokenObtainPairView):
         serializer = GetTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        try:
-            user = MyUser.objects.get(username=data['username'])
-        except MyUser.DoesNotExist:
+        if not MyUser.objects.filter(
+            username=request.data.get('username')
+        ).exists():
             return Response(
                 {'username': 'Пользователь не найден!'},
                 status=status.HTTP_404_NOT_FOUND)
+        user = MyUser.objects.get(username=data['username'])
         if default_token_generator.check_token(
             user,
             data.get('confirmation_code')
