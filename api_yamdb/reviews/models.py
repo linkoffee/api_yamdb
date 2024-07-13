@@ -1,24 +1,12 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.tokens import default_token_generator
 from django.core.validators import (MaxValueValidator, MinValueValidator,
                                     RegexValidator)
 from django.db import models
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 
-from .constants import CHAR_OUTPUT_LIMIT, MAX_NAME_LENGTH, MAX_SLUG_LENGTH
+from .constants import (CHAR_OUTPUT_LIMIT, MAX_NAME_LENGTH, MAX_SLUG_LENGTH,
+                        ROLE_CHOICES)
 from .validators import username_validator
-
-USER = 'user'
-ADMIN = 'admin'
-MODERATOR = 'moderator'
-
-ROLE_CHOICES = [
-    (USER, USER),
-    (ADMIN, ADMIN),
-    (MODERATOR, MODERATOR),
-]
 
 
 class MyUser(AbstractUser):
@@ -54,25 +42,17 @@ class MyUser(AbstractUser):
         ]
     )
 
-    confirmation_code = models.CharField(
-        'код подтверждения',
-        max_length=255,
-        null=True,
-        blank=False,
-        default='XXXX'
-    )
-
     @property
     def is_user(self):
-        return self.role == USER
+        return self.role == ROLE_CHOICES[0][0]
 
     @property
     def is_admin(self):
-        return self.role == ADMIN
+        return self.role == ROLE_CHOICES[1][0]
 
     @property
     def is_moderator(self):
-        return self.role == MODERATOR
+        return self.role == ROLE_CHOICES[2][0]
 
     class Meta:
         ordering = ('id',)
@@ -87,16 +67,6 @@ class MyUser(AbstractUser):
 
     def __str__(self):
         return self.username
-
-
-@receiver(post_save, sender=MyUser)
-def post_save(sender, instance, created, **kwargs):
-    if created:
-        confirmation_code = default_token_generator.make_token(
-            instance
-        )
-        instance.confirmation_code = confirmation_code
-        instance.save()
 
 
 User = get_user_model()

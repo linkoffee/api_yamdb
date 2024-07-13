@@ -1,3 +1,4 @@
+from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -7,7 +8,6 @@ from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
@@ -132,13 +132,16 @@ class MyUserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class APISignup(APIView):
+class SignupViewSet(mixins.CreateModelMixin,
+                    viewsets.GenericViewSet):
     """
     Получить код подтверждения на переданный email. Права доступа: Доступно без
     токена. Использовать имя 'me' в качестве username запрещено. Поля email и
     username должны быть уникальными.
     """
 
+    queryset = MyUser.objects.all()
+    serializer_class = SignUpSerializer
     permission_classes = (permissions.AllowAny,)
 
     @staticmethod
@@ -155,30 +158,25 @@ class APISignup(APIView):
         email.send()
 
     def post(self, request):
-        username = request.data.get('username')
-        if not MyUser.objects.filter(username=username).exists():
+        if not MyUser.objects.filter(
+            username=request.data.get('username')
+        ).exists():
             serializer = SignUpSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            if serializer.validated_data['username'] != 'me':
-                user = serializer.save()
-                self.send_email(
-                    user.username, user.confirmation_code, user.email)
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            return Response(
-                'Username указан невено!', status=status.HTTP_400_BAD_REQUEST
-            )
-        user = get_object_or_404(MyUser, username=username)
+            user = serializer.save()
+            confirmation_code = default_token_generator.make_token(user)
+            self.send_email(user.username, confirmation_code, user.email)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         serializer = SignUpSerializer(
-            user, data=request.data, partial=True
+            get_object_or_404(MyUser, username=request.data.get('username')),
+            data=request.data,
+            partial=True
         )
         serializer.is_valid(raise_exception=True)
-        if serializer.validated_data['email'] == user.email:
-            user = serializer.save()
-            self.send_email(user.username, user.confirmation_code, user.email)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(
-            'Почта указана неверно!', status=status.HTTP_400_BAD_REQUEST
-        )
+        user = serializer.save()
+        confirmation_code = default_token_generator.make_token(user)
+        self.send_email(user.username, confirmation_code, user.email)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class MyTokenObtainView(TokenObtainPairView):
@@ -191,13 +189,17 @@ class MyTokenObtainView(TokenObtainPairView):
         serializer = GetTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        try:
-            user = MyUser.objects.get(username=data['username'])
-        except MyUser.DoesNotExist:
+        if not MyUser.objects.filter(
+            username=request.data.get('username')
+        ).exists():
             return Response(
                 {'username': 'Пользователь не найден!'},
                 status=status.HTTP_404_NOT_FOUND)
-        if data.get('confirmation_code') == user.confirmation_code:
+        user = MyUser.objects.get(username=data['username'])
+        if default_token_generator.check_token(
+            user,
+            data.get('confirmation_code')
+        ):
             token = RefreshToken.for_user(user).access_token
             return Response({'token': str(token)},
                             status=status.HTTP_201_CREATED)

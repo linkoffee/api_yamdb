@@ -116,10 +116,15 @@ class ReviewSerializer(serializers.ModelSerializer):
 class GetTokenSerializer(serializers.ModelSerializer):
     """Сериализатор для получения пользователем JWT-токена."""
 
-    username = serializers.CharField(
-        required=True)
+    username = serializers.RegexField(
+        regex=r'^[\w.@+-]+$',
+        max_length=150,
+        required=True
+    )
     confirmation_code = serializers.CharField(
-        required=True)
+        max_length=150,
+        required=True
+    )
 
     class Meta:
         model = MyUser
@@ -156,6 +161,18 @@ class SignUpSerializer(serializers.ModelSerializer):
     class Meta:
         model = MyUser
         fields = ('email', 'username')
+
+    def validate(self, data):
+        if data.get('username') == 'me':
+            raise serializers.ValidationError(
+                'Использовать имя me запрещено'
+            )
+        if MyUser.objects.filter(username=data.get('username')):
+            if not MyUser.objects.filter(email=data.get('email')):
+                raise serializers.ValidationError(
+                    'Указан неверный email'
+                )
+        return data
 
 
 class CommentSerializer(serializers.ModelSerializer):
