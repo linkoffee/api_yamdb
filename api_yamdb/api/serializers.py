@@ -48,17 +48,31 @@ class TitleSerializerForWrite(serializers.ModelSerializer):
 
     category = serializers.SlugRelatedField(
         queryset=Category.objects.all(),
-        slug_field='slug'
+        slug_field='slug',
+        required=False
     )
     genre = serializers.SlugRelatedField(
         queryset=Genre.objects.all(),
         many=True,
-        slug_field='slug'
+        slug_field='slug',
+        required=False
     )
 
     class Meta:
         model = Title
         fields = '__all__'
+
+    def create(self, validated_data):
+        genres_data = validated_data.pop('genre', [])
+        title = Title.objects.create(**validated_data)
+        title.genre.set(genres_data)
+        return title
+
+    def update(self, instance, validated_data):
+        genres_data = validated_data.pop('genre', [])
+        instance = super().update(instance, validated_data)
+        instance.genre.set(genres_data)
+        return instance
 
 
 class CurrentTitleDefault:
