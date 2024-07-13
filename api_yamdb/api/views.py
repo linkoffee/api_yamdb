@@ -158,9 +158,22 @@ class SignupViewSet(mixins.CreateModelMixin,
         email.send()
 
     def post(self, request):
-        serializer = SignUpSerializer(data=request.data)
+        if not MyUser.objects.filter(
+            username=request.data.get('username')
+        ).exists():
+            serializer = SignUpSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            user = serializer.save()
+            confirmation_code = default_token_generator.make_token(user)
+            self.send_email(user.username, confirmation_code, user.email)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = SignUpSerializer(
+            get_object_or_404(MyUser, username=request.data.get('username')),
+            data=request.data,
+            partial=True
+        )
         serializer.is_valid(raise_exception=True)
-        user, _ = MyUser.objects.get_or_create(**serializer.validated_data)
+        user = serializer.save()
         confirmation_code = default_token_generator.make_token(user)
         self.send_email(user.username, confirmation_code, user.email)
         return Response(serializer.data, status=status.HTTP_200_OK)
