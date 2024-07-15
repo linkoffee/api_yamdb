@@ -57,11 +57,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """Viewset модели отзывов."""
 
     serializer_class = ReviewSerializer
-    http_method_names = ['get', 'post', 'patch', 'delete']
-    # Когда объявляется коллекция, нужно верно выбрать между списком и кортежем(тут список).
-    # Выбор нужно делать осознанно, потому что список изменяемый, а кортеж нет.
-    # Если предполагается, что сюда будет вноситься изменения где то в коде, то нужен список, а если изменений никаких не будет то лучше кортеж.
-    # Исправить везде
+    http_method_names = ('get', 'post', 'patch', 'delete')
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,
                           IsAuthorOrModerPermission,)
 
@@ -208,7 +204,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     """Viewset модели комментариев."""
 
     serializer_class = CommentSerializer
-    http_method_names = ['get', 'post', 'patch', 'delete']
+    http_method_names = ('get', 'post', 'patch', 'delete')
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,
                           IsAuthorOrModerPermission,)
 

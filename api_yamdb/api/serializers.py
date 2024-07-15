@@ -39,16 +39,6 @@ class TitleSerializerForRead(serializers.ModelSerializer):
             'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
         )
 
-    def get_rating(self, obj):
-        scores = Review.objects.filter(title_id=obj).values_list(
-            'score',
-            flat=True
-        )
-        if not scores:
-            return None
-        rating_sum = sum(scores)
-        return rating_sum / len(scores)
-
 
 class TitleSerializerForWrite(serializers.ModelSerializer):
     """Сериализатор данных модели произведения для записи."""
