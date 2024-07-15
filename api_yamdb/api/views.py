@@ -1,11 +1,11 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
 from django.shortcuts import get_object_or_404
+from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, status, viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -20,23 +20,18 @@ from .serializers import (CategorySerializer, CommentSerializer,
                           ReviewSerializer, SignUpSerializer,
                           TitleSerializerForRead, TitleSerializerForWrite,)
 from .filters import TitleFilter
+from .mixins import CategoryGenreMixin
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Viewset модели произведения."""
 
-    queryset = Title.objects.all()
+    queryset = Title.objects.annotate(rating=Avg('reviews__score')).all()
     permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (DjangoFilterBackend,)
+    filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
     filterset_class = TitleFilter
-
-    def update(self, request, *args, **kwargs):
-        if request.method == 'PUT':
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().update(request, *args, **kwargs)
-
-    def partial_update(self, request, *args, **kwargs):
-        return super().partial_update(request, *args, **kwargs)
+    ordering_fields = ('id', 'name', 'year')
+    http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_serializer_class(self):
         if self.action in ('create', 'partial_update'):
@@ -44,34 +39,18 @@ class TitleViewSet(viewsets.ModelViewSet):
         return TitleSerializerForRead
 
 
-class GenreViewSet(mixins.CreateModelMixin,
-                   mixins.ListModelMixin,
-                   mixins.DestroyModelMixin,
-                   viewsets.GenericViewSet):
+class GenreViewSet(CategoryGenreMixin):
     """Viewset модели жанра."""
 
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    pagination_class = PageNumberPagination
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
-    permission_classes = (IsAdminOrReadOnly,)
 
 
-class CategoryViewSet(mixins.CreateModelMixin,
-                      mixins.ListModelMixin,
-                      mixins.DestroyModelMixin,
-                      viewsets.GenericViewSet):
+class CategoryViewSet(CategoryGenreMixin):
     """Viewset модели категории."""
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    pagination_class = PageNumberPagination
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
-    permission_classes = (IsAdminOrReadOnly,)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -89,15 +68,18 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Получаем отзывы к конкретному произведению."""
         title = get_object_or_404(Title, pk=self.kwargs['title_id'])
-        return Review.objects.filter(title=title)  # Вспоминаем про related_name, станет чуть короче.
+        # Вспоминаем про related_name, станет чуть короче.
+        return Review.objects.filter(title=title)
 
     def perform_create(self, serializer):
         """Добавляем авторизованного пользователя к отзыву."""
-        title = get_object_or_404(Title, pk=self.kwargs['title_id'])  # Напрашивается метод для получения объекта, код одинаковый в 91 строке и в 96 строках.
+        title = get_object_or_404(
+            Title, pk=self.kwargs['title_id'])  # Напрашивается метод для получения объекта, код одинаковый в 91 строке и в 96 строках.
         serializer.save(author=self.request.user, title=title)
 
 
-class MyUserViewSet(viewsets.ModelViewSet):  # My Никогда и нигде не использовать эту приставку, так же как и Custom, это плохой тон.
+# My Никогда и нигде не использовать эту приставку, так же как и Custom, это плохой тон.
+class MyUserViewSet(viewsets.ModelViewSet):
     """
     Управляет адресами, начинающимися с users/. Права доступа:
     различаются в зависимости от пользовательских ролей.
@@ -113,7 +95,8 @@ class MyUserViewSet(viewsets.ModelViewSet):  # My Никогда и нигде �
     search_fields = ('username', )
 
     @action(
-        methods=['GET', 'PATCH', 'POST'],  # Лишний метод post, админ сделает свои дела по нику, а не в me. Так же и условие в 123 строке лишнее.
+        # Лишний метод post, админ сделает свои дела по нику, а не в me. Так же и условие в 123 строке лишнее.
+        methods=['GET', 'PATCH', 'POST'],
         detail=False,
         permission_classes=(IsUserForSelfPermission, IsAuthenticated),
         url_path='me')
@@ -157,7 +140,8 @@ class SignupViewSet(mixins.CreateModelMixin,
     permission_classes = (permissions.AllowAny,)
 
     @staticmethod
-    def send_email(username, confirmation_code, email):  # Это тут всё зачем? Есть же функция для отправки, в файле utils.
+    # Это тут всё зачем? Есть же функция для отправки, в файле utils.
+    def send_email(username, confirmation_code, email):
         email = EmailMessage(
             subject='Код подтвержения для доступа к API!',
             body=(
@@ -235,5 +219,6 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """Присваиваем автора комментарию."""
-        review = get_object_or_404(Review, pk=self.kwargs['review_id'])  # Напрашивается метод для получения объекта, код одинаковый в 233 строке и в 238 строках.
+        review = get_object_or_404(
+            Review, pk=self.kwargs['review_id'])  # Напрашивается метод для получения объекта, код одинаковый в 233 строке и в 238 строках.
         serializer.save(author=self.request.user, review=review)

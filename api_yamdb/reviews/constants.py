@@ -1,3 +1,5 @@
+from django.utils import timezone
+
 # Ограничитель на длину заголовка:
 MAX_NAME_LENGTH = 256
 
@@ -6,6 +8,12 @@ MAX_SLUG_LENGTH = 50
 
 # Ограничитель на кол-во выводимых символов в заголовке:
 CHAR_OUTPUT_LIMIT = 20
+
+# Минимальный год для успешной валидации:
+MIN_YEAR = 0
+
+# Максимальный год для успешной валидации:
+CURRENT_YEAR = timezone.now().year
 
 # Роли пользователей:
 USER = 'user'

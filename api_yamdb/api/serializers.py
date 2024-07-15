@@ -31,11 +31,13 @@ class TitleSerializerForRead(serializers.ModelSerializer):
 
     genre = GenreSerializer(many=True)
     category = CategorySerializer(read_only=True)
-    rating = serializers.SerializerMethodField()
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Title
-        fields = '__all__'
+        fields = (
+            'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
+        )
 
     def get_rating(self, obj):
         scores = Review.objects.filter(title_id=obj).values_list(
@@ -60,15 +62,25 @@ class TitleSerializerForWrite(serializers.ModelSerializer):
         queryset=Genre.objects.all(),
         many=True,
         slug_field='slug',
-        required=True
+        allow_null=False,
+        allow_empty=False
     )
 
     class Meta:
         model = Title
         fields = '__all__'
 
+    def validate_genre(self, value):
+        """Проверка, что поле жанра не пустое."""
+        if not value:
+            raise serializers.ValidationError(
+                'Поле "genre" не может быть пустым.'
+            )
+        return value
 
-class CurrentTitleDefault:  # Лишний класс, который еще и делает лишний запрос в БД, не нужно получать произведение.
+
+# Лишний класс, который еще и делает лишний запрос в БД, не нужно получать произведение.
+class CurrentTitleDefault:
 
     requires_context = True
 
@@ -129,7 +141,8 @@ class GetTokenSerializer(serializers.ModelSerializer):
         )
 
 
-class CustomUserSerializer(serializers.ModelSerializer):  # Custom Никогда и нигде не использовать эту приставку, так же как и My, это плохой тон.
+# Custom Никогда и нигде не использовать эту приставку, так же как и My, это плохой тон.
+class CustomUserSerializer(serializers.ModelSerializer):
     """Сериализатор под нужды администратора."""
 
     class Meta:
@@ -142,7 +155,8 @@ class CustomUserSerializer(serializers.ModelSerializer):  # Custom Никогд�
 class NotAdminSerializer(serializers.ModelSerializer):
     """Сериализатор для остальных пользователей."""
 
-    class Meta:  # Нужно наследовать и класс и мету от сериализатора для админа и удалить 146-149 строки.
+    # Нужно наследовать и класс и мету от сериализатора для админа и удалить 146-149 строки.
+    class Meta:
         model = MyUser
         fields = (
             'username', 'email', 'first_name',

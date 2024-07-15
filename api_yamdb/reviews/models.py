@@ -4,19 +4,22 @@ from django.core.validators import (MaxValueValidator, MinValueValidator,
                                     RegexValidator)
 from django.db import models
 
-from .constants import (CHAR_OUTPUT_LIMIT, MAX_NAME_LENGTH, MAX_SLUG_LENGTH,
-                        ROLE_CHOICES)
+from .constants import (CHAR_OUTPUT_LIMIT, MAX_NAME_LENGTH,
+                        MAX_SLUG_LENGTH, MIN_YEAR, CURRENT_YEAR, ROLE_CHOICES)
 from .validators import username_validator
 
 
-class MyUser(AbstractUser):  # My Никогда и нигде не использовать эту приставку, так же как и Custom, это плохой тон.
+# My Никогда и нигде не использовать эту приставку, так же как и Custom, это плохой тон.
+class MyUser(AbstractUser):
     """Модель пользователя."""
     # По PEP257 докстрингс должны заканчиваться точкой, первая строка должна заканчиваться точкой,
     # после докстрингс класса должна быть пустая строка. Исправить везде
     role = models.CharField(
-        max_length=9,  # Длину нужно подсчитать прямо тут, подсказка: используем лен и генератор. 
+        # Длину нужно подсчитать прямо тут, подсказка: используем лен и генератор.
+        max_length=9,
         choices=ROLE_CHOICES,
-        default='user',  # Используем константу, никаких литералов быть не должно.
+        # Используем константу, никаких литералов быть не должно.
+        default='user',
         verbose_name='Роль'
     )
 
@@ -29,7 +32,7 @@ class MyUser(AbstractUser):  # My Никогда и нигде не исполь
         # Общее для всех моделей:
         # Смотрим редок внимательно и видим там правильное ограничение длинны для всех полей.
         # Все настройки длины выносим в файл с константами (не settings), для многих полей они будут одинаковыми, не повторяемся.
-        # Для всех полей нужны verbose_name. 
+        # Для всех полей нужны verbose_name.
         # Для всех классов нужны в классах Meta verbose_name и verbose_name_plural.
         # У всех классов где используется пагинация, должна быть умолчательная сортировка.
         # Для всех классов нужны методы __str__.
@@ -40,7 +43,8 @@ class MyUser(AbstractUser):  # My Никогда и нигде не исполь
     username = models.CharField(
         max_length=150,
         unique=True,
-        blank=False,  # Это значение по умолчанию, его писать не нужно нигде. Как и 44 строка.
+        # Это значение по умолчанию, его писать не нужно нигде. Как и 44 строка.
+        blank=False,
         null=False,
         validators=[
             # Лучше написать свой валидатор с проверкой на me и на регулярку,
@@ -71,7 +75,8 @@ class MyUser(AbstractUser):  # My Никогда и нигде не исполь
 
     @property  # ОТЛИЧНО!
     def is_admin(self):
-        return self.role == ROLE_CHOICES[1][0]  # Зачем, так доставать, есть же константы! Нужно добавить сюда и супер пользователя.
+        # Зачем, так доставать, есть же константы! Нужно добавить сюда и супер пользователя.
+        return self.role == ROLE_CHOICES[1][0]
 
     @property
     def is_moderator(self):
@@ -99,44 +104,43 @@ class MyUser(AbstractUser):  # My Никогда и нигде не исполь
 User = get_user_model()  # Поднять под импорты.
 
 
-class Category(models.Model):
-    """Модель категории."""
+class BaseCategoryGenreModel(models.Model):
+    """Абстрактная модель для категории и жанра."""
+
     name = models.CharField(
         max_length=MAX_NAME_LENGTH,
-        verbose_name='Наименование категории'
+        verbose_name='Наименование'
     )
     slug = models.SlugField(
         unique=True,
         max_length=MAX_SLUG_LENGTH,
-        verbose_name='Уникальный идентификатор категории'
+        verbose_name='Уникальный идентификатор'
     )
 
     class Meta:
+        abstract = True
+        ordering = ('name',)
+        verbose_name = 'Наименование'
+        verbose_name_plural = 'Наименования'
+
+    def __str__(self):
+        return self.name[:CHAR_OUTPUT_LIMIT]
+
+
+class Category(BaseCategoryGenreModel):
+    """Модель категории."""
+
+    class Meta(BaseCategoryGenreModel.Meta):
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
 
-    def __str__(self):
-        return self.name[:CHAR_OUTPUT_LIMIT]
 
-
-class Genre(models.Model):
+class Genre(BaseCategoryGenreModel):
     """Модель жанра."""
-    name = models.CharField(
-        max_length=MAX_NAME_LENGTH,
-        verbose_name='Наименование жанра'
-    )
-    slug = models.SlugField(
-        unique=True,
-        max_length=MAX_SLUG_LENGTH,
-        verbose_name='Уникальный идентификатор жанра'
-    )
 
-    class Meta:
+    class Meta(BaseCategoryGenreModel.Meta):
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
-
-    def __str__(self):
-        return self.name[:CHAR_OUTPUT_LIMIT]
 
 
 class Title(models.Model):
@@ -145,7 +149,12 @@ class Title(models.Model):
         max_length=MAX_NAME_LENGTH,
         verbose_name='Наименование произведения'
     )
-    year = models.IntegerField(
+    year = models.SmallIntegerField(
+        validators=(
+            MinValueValidator(MIN_YEAR),
+            MaxValueValidator(CURRENT_YEAR)
+        ),
+        db_index=True,
         verbose_name='Год создания произведения'
     )
     description = models.TextField(
@@ -155,14 +164,12 @@ class Title(models.Model):
     )
     genre = models.ManyToManyField(
         Genre,
-        through='GenreTitle',
         related_name='titles',
         verbose_name='Жанр произведения'
     )
     category = models.ForeignKey(
         Category,
-        on_delete=models.SET_NULL,
-        null=True,
+        on_delete=models.CASCADE,
         related_name='titles',
         verbose_name='Категория произведения'
     )
@@ -173,15 +180,6 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name[:CHAR_OUTPUT_LIMIT]
-
-
-class GenreTitle(models.Model):
-    """Промежуточная модель для связи произведения и жанра."""
-    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
-    title = models.ForeignKey(Title, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return f'{self.genre} {self.title}'
 
 
 class Review(models.Model):
@@ -196,7 +194,8 @@ class Review(models.Model):
         verbose_name='Автор'
     )
     score = models.IntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(10)],  # Отлично!, но лучше добавить еще и сообщения об ошибках. Все магические числа убрать в файл для констант.
+        # Отлично!, но лучше добавить еще и сообщения об ошибках. Все магические числа убрать в файл для констант.
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
         verbose_name='Оценка'
     )
     pub_date = models.DateTimeField(
