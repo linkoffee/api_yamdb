@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from reviews.models import Category, Comment, Genre, MyUser, Review, Title
+from reviews.models import Category, Comment, Genre, APIUser, Review, Title
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -115,7 +115,7 @@ class GetTokenSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = MyUser
+        model = APIUser
         fields = (
             'username',
             'confirmation_code'
@@ -126,7 +126,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
     """Сериализатор под нужды администратора."""
 
     class Meta:
-        model = MyUser
+        model = APIUser
         fields = (
             'username', 'email', 'first_name',
             'last_name', 'bio', 'role')
@@ -136,7 +136,7 @@ class NotAdminSerializer(serializers.ModelSerializer):
     """Сериализатор для остальных пользователей."""
 
     class Meta:
-        model = MyUser
+        model = APIUser
         fields = (
             'username', 'email', 'first_name',
             'last_name', 'bio', 'role')
@@ -147,7 +147,7 @@ class SignUpSerializer(serializers.ModelSerializer):
     """Сериализатор для регистрации."""
 
     class Meta:
-        model = MyUser
+        model = APIUser
         fields = ('email', 'username')
 
     def validate(self, data):
@@ -155,8 +155,8 @@ class SignUpSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Использовать имя me запрещено'
             )
-        if MyUser.objects.filter(username=data.get('username')):
-            if not MyUser.objects.filter(email=data.get('email')):
+        if APIUser.objects.filter(username=data.get('username')):
+            if not APIUser.objects.filter(email=data.get('email')):
                 raise serializers.ValidationError(
                     'Указан неверный email'
                 )

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Category, Comment, Genre, MyUser, Review, Title
+from .models import Category, Comment, Genre, APIUser, Review, Title
 
 admin.site.empty_value_display = 'Здесь пока ничего нет:('
 
@@ -74,7 +74,7 @@ class GenreAdmin(admin.ModelAdmin):
 UserAdmin.fieldsets += (
     ('Extra Fields', {'fields': ('role',)}),
 )
-admin.site.register(MyUser, UserAdmin)
+admin.site.register(APIUser, UserAdmin)
 
 
 @admin.register(Review)

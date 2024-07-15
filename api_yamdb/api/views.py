@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from reviews.models import Category, Comment, Genre, MyUser, Review, Title
+from reviews.models import Category, Comment, Genre, APIUser, Review, Title
 from .permissions import (IsAdminOrStaffPermission, IsAdminOrReadOnly,
                           IsUserForSelfPermission, IsAuthorOrModerPermission)
 from .serializers import (CategorySerializer, CommentSerializer,
@@ -84,23 +84,25 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Получаем отзывы к конкретному произведению."""
+
         title = get_object_or_404(Title, pk=self.kwargs['title_id'])
         return Review.objects.filter(title=title)
 
     def perform_create(self, serializer):
         """Добавляем авторизованного пользователя к отзыву."""
+
         title = get_object_or_404(Title, pk=self.kwargs['title_id'])
         serializer.save(author=self.request.user, title=title)
 
 
-class MyUserViewSet(viewsets.ModelViewSet):
+class APIUserViewSet(viewsets.ModelViewSet):
     """
-    Управляет адресами, начинающимися с users/. Права доступа:
-    различаются в зависимости от пользовательских ролей.
+    Управляет адресами, начинающимися с users/.
+    Права доступа: различаются в зависимости от пользовательских ролей.
     По адресу users/me доступна информация о собственном профиле.
     """
 
-    queryset = MyUser.objects.all()
+    queryset = APIUser.objects.all()
     serializer_class = CustomUserSerializer
     permission_classes = (IsAdminOrStaffPermission,)
     lookup_field = 'username'
@@ -135,12 +137,13 @@ class MyUserViewSet(viewsets.ModelViewSet):
 class SignupViewSet(mixins.CreateModelMixin,
                     viewsets.GenericViewSet):
     """
-    Получить код подтверждения на переданный email. Права доступа: Доступно без
-    токена. Использовать имя 'me' в качестве username запрещено. Поля email и
-    username должны быть уникальными.
+    Получить код подтверждения на переданный email.
+    Права доступа: Доступно без токена.
+    Использовать имя 'me' в качестве username запрещено.
+    Поля email и username должны быть уникальными.
     """
 
-    queryset = MyUser.objects.all()
+    queryset = APIUser.objects.all()
     serializer_class = SignUpSerializer
     permission_classes = (permissions.AllowAny,)
 
@@ -158,7 +161,7 @@ class SignupViewSet(mixins.CreateModelMixin,
         email.send()
 
     def post(self, request):
-        if not MyUser.objects.filter(
+        if not APIUser.objects.filter(
             username=request.data.get('username')
         ).exists():
             serializer = SignUpSerializer(data=request.data)
@@ -168,7 +171,7 @@ class SignupViewSet(mixins.CreateModelMixin,
             self.send_email(user.username, confirmation_code, user.email)
             return Response(serializer.data, status=status.HTTP_200_OK)
         serializer = SignUpSerializer(
-            get_object_or_404(MyUser, username=request.data.get('username')),
+            get_object_or_404(APIUser, username=request.data.get('username')),
             data=request.data,
             partial=True
         )
@@ -189,13 +192,13 @@ class MyTokenObtainView(TokenObtainPairView):
         serializer = GetTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        if not MyUser.objects.filter(
+        if not APIUser.objects.filter(
             username=request.data.get('username')
         ).exists():
             return Response(
                 {'username': 'Пользователь не найден!'},
                 status=status.HTTP_404_NOT_FOUND)
-        user = MyUser.objects.get(username=data['username'])
+        user = APIUser.objects.get(username=data['username'])
         if default_token_generator.check_token(
             user,
             data.get('confirmation_code')
@@ -218,10 +221,12 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Получаем комментарии к конкретному отзыву."""
+
         review = get_object_or_404(Review, pk=self.kwargs['review_id'])
         return Comment.objects.filter(review=review)
 
     def perform_create(self, serializer):
         """Присваиваем автора комментарию."""
+
         review = get_object_or_404(Review, pk=self.kwargs['review_id'])
         serializer.save(author=self.request.user, review=review)

@@ -5,16 +5,17 @@ from django.core.validators import (MaxValueValidator, MinValueValidator,
 from django.db import models
 
 from .constants import (CHAR_OUTPUT_LIMIT, MAX_NAME_LENGTH, MAX_SLUG_LENGTH,
-                        ROLE_CHOICES)
+                        ROLE_CHOICES, USER, ADMIN, MODERATOR)
 from .validators import username_validator
 
 
-class MyUser(AbstractUser):
+class APIUser(AbstractUser):
     """Модель пользователя."""
+
     role = models.CharField(
         max_length=9,
         choices=ROLE_CHOICES,
-        default='user',
+        default=USER,
         verbose_name='Роль'
     )
 
@@ -44,15 +45,15 @@ class MyUser(AbstractUser):
 
     @property
     def is_user(self):
-        return self.role == ROLE_CHOICES[0][0]
+        return self.role == USER
 
     @property
     def is_admin(self):
-        return self.role == ROLE_CHOICES[1][0]
+        return self.role == ADMIN
 
     @property
     def is_moderator(self):
-        return self.role == ROLE_CHOICES[2][0]
+        return self.role == MODERATOR
 
     class Meta:
         ordering = ('id',)
@@ -74,6 +75,7 @@ User = get_user_model()
 
 class Category(models.Model):
     """Модель категории."""
+
     name = models.CharField(
         max_length=MAX_NAME_LENGTH,
         verbose_name='Наименование категории'
@@ -94,6 +96,7 @@ class Category(models.Model):
 
 class Genre(models.Model):
     """Модель жанра."""
+
     name = models.CharField(
         max_length=MAX_NAME_LENGTH,
         verbose_name='Наименование жанра'
@@ -114,6 +117,7 @@ class Genre(models.Model):
 
 class Title(models.Model):
     """Модель произведения."""
+
     name = models.CharField(
         max_length=MAX_NAME_LENGTH,
         verbose_name='Наименование произведения'
@@ -150,6 +154,7 @@ class Title(models.Model):
 
 class GenreTitle(models.Model):
     """Промежуточная модель для связи произведения и жанра."""
+
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
     title = models.ForeignKey(Title, on_delete=models.CASCADE)
 
@@ -159,6 +164,7 @@ class GenreTitle(models.Model):
 
 class Review(models.Model):
     """Модель отзыва."""
+
     text = models.TextField(
         verbose_name='Текст отзыва'
     )
@@ -201,6 +207,7 @@ class Review(models.Model):
 
 class Comment(models.Model):
     """Модель комментария."""
+
     text = models.TextField(
         verbose_name='Текст комментария'
     )
