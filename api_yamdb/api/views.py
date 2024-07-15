@@ -79,21 +79,25 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     serializer_class = ReviewSerializer
     http_method_names = ['get', 'post', 'patch', 'delete']
+    # Когда объявляется коллекция, нужно верно выбрать между списком и кортежем(тут список).
+    # Выбор нужно делать осознанно, потому что список изменяемый, а кортеж нет.
+    # Если предполагается, что сюда будет вноситься изменения где то в коде, то нужен список, а если изменений никаких не будет то лучше кортеж.
+    # Исправить везде
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,
                           IsAuthorOrModerPermission,)
 
     def get_queryset(self):
         """Получаем отзывы к конкретному произведению."""
         title = get_object_or_404(Title, pk=self.kwargs['title_id'])
-        return Review.objects.filter(title=title)
+        return Review.objects.filter(title=title)  # Вспоминаем про related_name, станет чуть короче.
 
     def perform_create(self, serializer):
         """Добавляем авторизованного пользователя к отзыву."""
-        title = get_object_or_404(Title, pk=self.kwargs['title_id'])
+        title = get_object_or_404(Title, pk=self.kwargs['title_id'])  # Напрашивается метод для получения объекта, код одинаковый в 91 строке и в 96 строках.
         serializer.save(author=self.request.user, title=title)
 
 
-class MyUserViewSet(viewsets.ModelViewSet):
+class MyUserViewSet(viewsets.ModelViewSet):  # My Никогда и нигде не использовать эту приставку, так же как и Custom, это плохой тон.
     """
     Управляет адресами, начинающимися с users/. Права доступа:
     различаются в зависимости от пользовательских ролей.
@@ -109,7 +113,7 @@ class MyUserViewSet(viewsets.ModelViewSet):
     search_fields = ('username', )
 
     @action(
-        methods=['GET', 'PATCH', 'POST'],
+        methods=['GET', 'PATCH', 'POST'],  # Лишний метод post, админ сделает свои дела по нику, а не в me. Так же и условие в 123 строке лишнее.
         detail=False,
         permission_classes=(IsUserForSelfPermission, IsAuthenticated),
         url_path='me')
@@ -134,6 +138,14 @@ class MyUserViewSet(viewsets.ModelViewSet):
 
 class SignupViewSet(mixins.CreateModelMixin,
                     viewsets.GenericViewSet):
+    # Избыточный родитель, тут достаточно APIView, либо вообще функции с декоратором apiview.
+    # Тоже и для токена.
+    # Так же в обоих этих классах должно быть всего 4 строки:
+    # - передать в сериализатор данные
+    # - проверить валидность
+    # - записать
+    # - вернуть Response
+    # Всё остальное (создание и валидация) должно быть в сериализаторе.
     """
     Получить код подтверждения на переданный email. Права доступа: Доступно без
     токена. Использовать имя 'me' в качестве username запрещено. Поля email и
@@ -145,7 +157,7 @@ class SignupViewSet(mixins.CreateModelMixin,
     permission_classes = (permissions.AllowAny,)
 
     @staticmethod
-    def send_email(username, confirmation_code, email):
+    def send_email(username, confirmation_code, email):  # Это тут всё зачем? Есть же функция для отправки, в файле utils.
         email = EmailMessage(
             subject='Код подтвержения для доступа к API!',
             body=(
@@ -162,7 +174,7 @@ class SignupViewSet(mixins.CreateModelMixin,
             username=request.data.get('username')
         ).exists():
             serializer = SignUpSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
+            serializer.is_valid(raise_exception=True)  # ОТЛИЧНО!
             user = serializer.save()
             confirmation_code = default_token_generator.make_token(user)
             self.send_email(user.username, confirmation_code, user.email)
@@ -223,5 +235,5 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """Присваиваем автора комментарию."""
-        review = get_object_or_404(Review, pk=self.kwargs['review_id'])
+        review = get_object_or_404(Review, pk=self.kwargs['review_id'])  # Напрашивается метод для получения объекта, код одинаковый в 233 строке и в 238 строках.
         serializer.save(author=self.request.user, review=review)

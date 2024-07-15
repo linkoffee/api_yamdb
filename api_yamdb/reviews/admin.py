@@ -75,7 +75,7 @@ UserAdmin.fieldsets += (
     ('Extra Fields', {'fields': ('role',)}),
 )
 admin.site.register(MyUser, UserAdmin)
-
+#  Роль должна быть редактируемой в листе пользователей.
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):

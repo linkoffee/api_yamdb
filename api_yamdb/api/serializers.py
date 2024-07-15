@@ -1,6 +1,11 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from reviews.models import Category, Comment, Genre, MyUser, Review, Title
+# PEP8:  Импорты нужно отсортировать в правильном порядке с верху вниз:
+#  - импорты из стандартных библиотек
+#  - импорты сторонних библиотек (djando, rest_framework и т.д.)
+#  - импорты модулей этого проекта
+#  Между этими группами импортов должна быть пустая строка.
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -63,7 +68,7 @@ class TitleSerializerForWrite(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class CurrentTitleDefault:
+class CurrentTitleDefault:  # Лишний класс, который еще и делает лишний запрос в БД, не нужно получать произведение.
 
     requires_context = True
 
@@ -90,11 +95,11 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         request = self.context['request']
-        title = get_object_or_404(
+        title = get_object_or_404(  # Лишний запрос в БД, получать произведение не нужно. Достаточно в фильтр в 103 строке передать его id.
             Title,
             id=self.context['request'].parser_context['kwargs']['title_id']
         )
-        if request.method == 'POST':
+        if request.method == 'POST':  # Поднять выше получения id произведения, зачем его получать, если метод будет не пост?
             if Review.objects.filter(author=self.context['request'].user,
                                      title=title).exists():
                 raise serializers.ValidationError('Отзыв уже оставлен')
@@ -102,6 +107,8 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class GetTokenSerializer(serializers.ModelSerializer):
+    # Для классов Регистрации и Проверки токена не нужно общение с БД, нужно переопределить родительский класс.
+    # Так же смотри замечание в модели про валидацию и про длину полей, это касается всех сериалайзеров для Пользователя.
     """Сериализатор для получения пользователем JWT-токена."""
 
     username = serializers.RegexField(
@@ -122,7 +129,7 @@ class GetTokenSerializer(serializers.ModelSerializer):
         )
 
 
-class CustomUserSerializer(serializers.ModelSerializer):
+class CustomUserSerializer(serializers.ModelSerializer):  # Custom Никогда и нигде не использовать эту приставку, так же как и My, это плохой тон.
     """Сериализатор под нужды администратора."""
 
     class Meta:
@@ -135,7 +142,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
 class NotAdminSerializer(serializers.ModelSerializer):
     """Сериализатор для остальных пользователей."""
 
-    class Meta:
+    class Meta:  # Нужно наследовать и класс и мету от сериализатора для админа и удалить 146-149 строки.
         model = MyUser
         fields = (
             'username', 'email', 'first_name',

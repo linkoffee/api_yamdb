@@ -9,12 +9,14 @@ from .constants import (CHAR_OUTPUT_LIMIT, MAX_NAME_LENGTH, MAX_SLUG_LENGTH,
 from .validators import username_validator
 
 
-class MyUser(AbstractUser):
+class MyUser(AbstractUser):  # My Никогда и нигде не использовать эту приставку, так же как и Custom, это плохой тон.
     """Модель пользователя."""
+    # По PEP257 докстрингс должны заканчиваться точкой, первая строка должна заканчиваться точкой,
+    # после докстрингс класса должна быть пустая строка. Исправить везде
     role = models.CharField(
-        max_length=9,
+        max_length=9,  # Длину нужно подсчитать прямо тут, подсказка: используем лен и генератор. 
         choices=ROLE_CHOICES,
-        default='user',
+        default='user',  # Используем константу, никаких литералов быть не должно.
         verbose_name='Роль'
     )
 
@@ -24,6 +26,13 @@ class MyUser(AbstractUser):
     )
     email = models.EmailField(
         max_length=254,
+        # Общее для всех моделей:
+        # Смотрим редок внимательно и видим там правильное ограничение длинны для всех полей.
+        # Все настройки длины выносим в файл с константами (не settings), для многих полей они будут одинаковыми, не повторяемся.
+        # Для всех полей нужны verbose_name. 
+        # Для всех классов нужны в классах Meta verbose_name и verbose_name_plural.
+        # У всех классов где используется пагинация, должна быть умолчательная сортировка.
+        # Для всех классов нужны методы __str__.
         unique=True,
         verbose_name='Электронная почта'
     )
@@ -31,9 +40,23 @@ class MyUser(AbstractUser):
     username = models.CharField(
         max_length=150,
         unique=True,
-        blank=False,
+        blank=False,  # Это значение по умолчанию, его писать не нужно нигде. Как и 44 строка.
         null=False,
         validators=[
+            # Лучше написать свой валидатор с проверкой на me и на регулярку,
+            # штатный не ответит на вопрос, какой неверный символ ввел пользователь,
+            # только укажет на ошибку, пользователю придется гадать, какой из символов неверный,
+            # нужно дать четкий ответ, какой символ недопустим в имени, рекомендую использовать re.sub,
+            # получить строку из запрещенных символов, проверить, что она есть, выдать ошибку с текстом.
+            # Можно лучше(Необязательно к выполнению):
+            # Валидатор для username можно использовать в миксине вот так:
+
+            # ИмяМиксина:
+            #   def validate_username(self, username):
+            #       return имя_метода_валидации(username)
+
+            # И наследовать сериалайзеры от этого миксина так:
+            # Сериалайзер(ОсновнойРодитель, Миксин)
             RegexValidator(
                 regex=r'^[\w.@+-]+\Z',
                 message='Недопустимые символы в username',
@@ -43,12 +66,12 @@ class MyUser(AbstractUser):
     )
 
     @property
-    def is_user(self):
+    def is_user(self):  # Негде не используется.
         return self.role == ROLE_CHOICES[0][0]
 
-    @property
+    @property  # ОТЛИЧНО!
     def is_admin(self):
-        return self.role == ROLE_CHOICES[1][0]
+        return self.role == ROLE_CHOICES[1][0]  # Зачем, так доставать, есть же константы! Нужно добавить сюда и супер пользователя.
 
     @property
     def is_moderator(self):
@@ -56,6 +79,10 @@ class MyUser(AbstractUser):
 
     class Meta:
         ordering = ('id',)
+        # Никакого прока от сортировки по техническому полю "ключ" нет.
+        # Учти, что значения ключей - это случайные величины (точнее они могут непредсказуемо измениться).
+        # Поэтому сортировка по ним - это опять случайная последовательность объектов.
+        # Лучше заменить на предметное поле (можно на несколько полей - ведь это перечисление)
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
         constraints = [
@@ -69,7 +96,7 @@ class MyUser(AbstractUser):
         return self.username
 
 
-User = get_user_model()
+User = get_user_model()  # Поднять под импорты.
 
 
 class Category(models.Model):
@@ -169,7 +196,7 @@ class Review(models.Model):
         verbose_name='Автор'
     )
     score = models.IntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        validators=[MinValueValidator(1), MaxValueValidator(10)],  # Отлично!, но лучше добавить еще и сообщения об ошибках. Все магические числа убрать в файл для констант.
         verbose_name='Оценка'
     )
     pub_date = models.DateTimeField(
@@ -200,6 +227,9 @@ class Review(models.Model):
 
 
 class Comment(models.Model):
+    # Оба класса (Ревью и Комменты) имеют одинаковые поля и в мете тоже, значит можно создать базовый абстрактный класс и унаследовать от него обе модели.
+    # Но не забудьте что мету тоже нужно наследовать иначе она перезапишет всё, а не только то что 'другое'. Класс наследуется от класса, мета от меты.
+    # Еще в моделях ревью и комментов можно в мете добавить умолчательное значение related_name, чтобы не указывать его для каждого поля.
     """Модель комментария."""
     text = models.TextField(
         verbose_name='Текст комментария'

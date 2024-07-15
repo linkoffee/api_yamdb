@@ -7,3 +7,4 @@ def username_validator(value):
             ('Имя пользователя не может быть <me>.'),
             params={'value': value},
         )
+    #  Валидатор должен возвращать значение.
