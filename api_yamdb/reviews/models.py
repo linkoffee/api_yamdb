@@ -4,8 +4,9 @@ from django.core.validators import (MaxValueValidator, MinValueValidator,
                                     RegexValidator)
 from django.db import models
 
-from .constants import (CHAR_OUTPUT_LIMIT, MAX_NAME_LENGTH,
-                        MAX_SLUG_LENGTH, MIN_YEAR, CURRENT_YEAR, ROLE_CHOICES)
+from .constants import (CHAR_OUTPUT_LIMIT, MAX_NAME_LENGTH, MAX_SCORE,
+                        MAX_SLUG_LENGTH, MIN_SCORE, MIN_YEAR, CURRENT_YEAR,
+                        ROLE_CHOICES)
 from .validators import username_validator
 
 
@@ -182,36 +183,46 @@ class Title(models.Model):
         return self.name[:CHAR_OUTPUT_LIMIT]
 
 
-class Review(models.Model):
-    """Модель отзыва."""
-    text = models.TextField(
-        verbose_name='Текст отзыва'
-    )
+class BaseReviewCommentModel(models.Model):
+    """Базовый класс моделей отзыва и комментария."""
+
+    text = models.TextField(verbose_name='Текст')
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='reviews',
         verbose_name='Автор'
-    )
-    score = models.IntegerField(
-        # Отлично!, но лучше добавить еще и сообщения об ошибках. Все магические числа убрать в файл для констант.
-        validators=[MinValueValidator(1), MaxValueValidator(10)],
-        verbose_name='Оценка'
     )
     pub_date = models.DateTimeField(
         auto_now_add=True,
         verbose_name='Дата добавления'
     )
+
+    class Meta:
+        abstract = True
+        ordering = ('-pub_date',)
+
+    def __str__(self):
+        return self.text[:CHAR_OUTPUT_LIMIT]
+
+
+class Review(BaseReviewCommentModel):
+    """Модель отзыва."""
+
+    score = models.IntegerField(
+        validators=[
+            MinValueValidator(MIN_SCORE, 'Оценка не может быть меньше 1'),
+            MaxValueValidator(MAX_SCORE, 'Оценка не может быть больше 10')
+        ],
+        verbose_name='Оценка'
+    )
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
         db_index=True,
-        related_name='reviews',
         verbose_name='Наименование произведения'
     )
 
-    class Meta:
-        ordering = ('-pub_date',)
+    class Meta(BaseReviewCommentModel.Meta):
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
         constraints = [
@@ -220,39 +231,19 @@ class Review(models.Model):
                 name='unique_author_title'
             )
         ]
-
-    def __str__(self):
-        return self.text[:CHAR_OUTPUT_LIMIT]
+        default_related_name = 'reviews'
 
 
-class Comment(models.Model):
-    # Оба класса (Ревью и Комменты) имеют одинаковые поля и в мете тоже, значит можно создать базовый абстрактный класс и унаследовать от него обе модели.
-    # Но не забудьте что мету тоже нужно наследовать иначе она перезапишет всё, а не только то что 'другое'. Класс наследуется от класса, мета от меты.
-    # Еще в моделях ревью и комментов можно в мете добавить умолчательное значение related_name, чтобы не указывать его для каждого поля.
+class Comment(BaseReviewCommentModel):
     """Модель комментария."""
-    text = models.TextField(
-        verbose_name='Текст комментария'
-    )
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='comments',
-        verbose_name='Автор'
-    )
-    pub_date = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name='Дата добавления')
+
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
-        related_name='comments',
         verbose_name='Отзыв'
     )
 
-    class Meta:
-        ordering = ('-pub_date',)
+    class Meta(BaseReviewCommentModel.Meta):
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
-
-    def __str__(self):
-        return self.text[:CHAR_OUTPUT_LIMIT]
+        default_related_name = 'comments'
