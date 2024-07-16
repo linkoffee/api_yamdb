@@ -61,16 +61,18 @@ class ReviewViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,
                           IsAuthorOrModerPermission,)
 
+    def get_title(self):
+        """Получаем произведение для отзыва."""
+        return get_object_or_404(Title, pk=self.kwargs['title_id'])
+
     def get_queryset(self):
         """Получаем отзывы к конкретному произведению."""
-        title = get_object_or_404(Title, pk=self.kwargs['title_id'])
-        # Вспоминаем про related_name, станет чуть короче.
-        return Review.objects.filter(title=title)
+        title = self.get_title()
+        return title.reviews.all()
 
     def perform_create(self, serializer):
         """Добавляем авторизованного пользователя к отзыву."""
-        title = get_object_or_404(
-            Title, pk=self.kwargs['title_id'])  # Напрашивается метод для получения объекта, код одинаковый в 91 строке и в 96 строках.
+        title = self.get_title()
         serializer.save(author=self.request.user, title=title)
 
 
@@ -208,13 +210,16 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,
                           IsAuthorOrModerPermission,)
 
+    def get_review(self):
+        """Получаем отзыв для комментария."""
+        return get_object_or_404(Review, pk=self.kwargs['review_id'])
+
     def get_queryset(self):
         """Получаем комментарии к конкретному отзыву."""
-        review = get_object_or_404(Review, pk=self.kwargs['review_id'])
-        return Comment.objects.filter(review=review)
+        review = self.get_review()
+        return review.comments.all()
 
     def perform_create(self, serializer):
         """Присваиваем автора комментарию."""
-        review = get_object_or_404(
-            Review, pk=self.kwargs['review_id'])  # Напрашивается метод для получения объекта, код одинаковый в 233 строке и в 238 строках.
+        review = self.get_review()
         serializer.save(author=self.request.user, review=review)
