@@ -97,13 +97,12 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         request = self.context['request']
-        title = get_object_or_404(  # Лишний запрос в БД, получать произведение не нужно. Достаточно в фильтр в 103 строке передать его id.
-            Title,
-            id=self.context['request'].parser_context['kwargs']['title_id']
-        )
-        if request.method == 'POST':  # Поднять выше получения id произведения, зачем его получать, если метод будет не пост?
-            if Review.objects.filter(author=self.context['request'].user,
-                                     title=title).exists():
+        if request.method == 'POST':
+            if Review.objects.filter(
+                    author=self.context['request'].user,
+                    title=self.context['request'].parser_context['kwargs']
+                    ['title_id']
+            ).exists():
                 raise serializers.ValidationError('Отзыв уже оставлен')
         return attrs
 
