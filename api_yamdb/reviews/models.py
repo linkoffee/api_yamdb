@@ -146,6 +146,7 @@ class Genre(BaseCategoryGenreModel):
 
 class Title(models.Model):
     """Модель произведения."""
+
     name = models.CharField(
         max_length=MAX_NAME_LENGTH,
         verbose_name='Наименование произведения'

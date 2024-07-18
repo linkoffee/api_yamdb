@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from reviews.models import Category, Comment, Genre, MyUser, Review, Title
+from reviews.models import Category, Genre, MyUser, Review, Title
 from .permissions import (IsAdminOrStaffPermission, IsAdminOrReadOnly,
                           IsUserForSelfPermission, IsAuthorOrModerPermission)
 from .serializers import (CategorySerializer, CommentSerializer,
