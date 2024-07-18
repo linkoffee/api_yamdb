@@ -1,8 +1,8 @@
 from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import EmailMessage
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, permissions, status, viewsets, mixins
+from rest_framework import (filters, mixins, permissions, status, views,
+                            viewsets)
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
@@ -11,15 +11,16 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from reviews.models import Category, Comment, Genre, APIUser, Review, Title
-from .permissions import (IsAdminOrStaffPermission, IsAdminOrReadOnly,
-                          IsUserForSelfPermission, IsAuthorOrModerPermission)
-from .serializers import (CategorySerializer, CommentSerializer,
-                          CustomUserSerializer, GenreSerializer,
-                          GetTokenSerializer, NotAdminSerializer,
-                          ReviewSerializer, SignUpSerializer,
-                          TitleSerializerForRead, TitleSerializerForWrite,)
+from reviews.models import APIUser, Category, Comment, Genre, Review, Title
+from .email_func import send_code_to_email
 from .filters import TitleFilter
+from .permissions import (IsAdminOrReadOnly, IsAdminOrStaffPermission,
+                          IsAuthorOrModerPermission)
+from .serializers import (CategorySerializer, CommentSerializer,
+                          GenreSerializer, GetTokenSerializer,
+                          NotAdminSerializer, ReviewSerializer,
+                          SignUpSerializer, TitleSerializerForRead,
+                          TitleSerializerForWrite, UserSerializer)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -103,7 +104,7 @@ class APIUserViewSet(viewsets.ModelViewSet):
     """
 
     queryset = APIUser.objects.all()
-    serializer_class = CustomUserSerializer
+    serializer_class = UserSerializer
     permission_classes = (IsAdminOrStaffPermission,)
     lookup_field = 'username'
     http_method_names = ['get', 'post', 'patch', 'delete']
@@ -111,31 +112,29 @@ class APIUserViewSet(viewsets.ModelViewSet):
     search_fields = ('username', )
 
     @action(
-        methods=['GET', 'PATCH', 'POST'],
+        methods=['GET', 'PATCH'],
         detail=False,
-        permission_classes=(IsUserForSelfPermission, IsAuthenticated),
+        permission_classes=(IsAuthenticated,),
         url_path='me')
     def get_current_user_info(self, request):
-        serializer = CustomUserSerializer(request.user)
+        serializer = UserSerializer(request.user)
         if request.method == 'PATCH':
             if request.user.is_admin:
-                serializer = CustomUserSerializer(
+                serializer = UserSerializer(
                     request.user,
                     data=request.data,
                     partial=True)
-            else:
-                serializer = NotAdminSerializer(
-                    request.user,
-                    data=request.data,
-                    partial=True)
+            serializer = NotAdminSerializer(
+                request.user,
+                data=request.data,
+                partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.data)
 
 
-class SignupViewSet(mixins.CreateModelMixin,
-                    viewsets.GenericViewSet):
+class APISignup(views.APIView):
     """
     Получить код подтверждения на переданный email.
     Права доступа: Доступно без токена.
@@ -143,46 +142,30 @@ class SignupViewSet(mixins.CreateModelMixin,
     Поля email и username должны быть уникальными.
     """
 
-    queryset = APIUser.objects.all()
-    serializer_class = SignUpSerializer
     permission_classes = (permissions.AllowAny,)
-
-    @staticmethod
-    def send_email(username, confirmation_code, email):
-        email = EmailMessage(
-            subject='Код подтвержения для доступа к API!',
-            body=(
-                    f'Доброе время суток, {username}.'
-                    '\nКод подтвержения для доступа к API:'
-                    f'\n{confirmation_code}'
-            ),
-            to=(email,)
-        )
-        email.send()
 
     def post(self, request):
         if not APIUser.objects.filter(
             username=request.data.get('username')
         ).exists():
-            serializer = SignUpSerializer(data=request.data)
+            serializer = SignUpSerializer(data=request.data)  # <-
             serializer.is_valid(raise_exception=True)
             user = serializer.save()
-            confirmation_code = default_token_generator.make_token(user)
-            self.send_email(user.username, confirmation_code, user.email)
+            send_code_to_email(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
         serializer = SignUpSerializer(
             get_object_or_404(APIUser, username=request.data.get('username')),
             data=request.data,
-            partial=True
+            partial=True  # <- я не знаю как указывать это в сериализаторе
         )
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        confirmation_code = default_token_generator.make_token(user)
-        self.send_email(user.username, confirmation_code, user.email)
+        send_code_to_email(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class MyTokenObtainView(TokenObtainPairView):
+class APITokenObtainView(TokenObtainPairView):  # APIView тот же самый
+    # только тесты не падают
     """
     Получение JWT-токена в обмен на username и confirmation code.
     Права доступа: Доступно без токена.
@@ -191,13 +174,16 @@ class MyTokenObtainView(TokenObtainPairView):
     def post(self, request):
         serializer = GetTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        # толку-то мне от этих отлично,
+        # если вокруг всё непонятно как переделывать
         data = serializer.validated_data
-        if not APIUser.objects.filter(
+        if not APIUser.objects.filter(  # <- ну не могу перетаскивать,
+            # ну тесты падают Key Error
             username=request.data.get('username')
         ).exists():
             return Response(
                 {'username': 'Пользователь не найден!'},
-                status=status.HTTP_404_NOT_FOUND)
+                status=status.HTTP_404_NOT_FOUND)  # failed 400!=404
         user = APIUser.objects.get(username=data['username'])
         if default_token_generator.check_token(
             user,

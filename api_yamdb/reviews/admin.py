@@ -1,5 +1,4 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
 
 from .models import Category, Comment, Genre, APIUser, Review, Title
 
@@ -70,11 +69,24 @@ class GenreAdmin(admin.ModelAdmin):
     )
 
 
-"""Админ панель пользователя."""
-UserAdmin.fieldsets += (
-    ('Extra Fields', {'fields': ('role',)}),
-)
-admin.site.register(APIUser, UserAdmin)
+@admin.register(APIUser)
+class APIUserAdmin(admin.ModelAdmin):
+    """Админ панель пользователя."""
+    list_display = (
+        'username',
+        'bio',
+        'role',
+        'first_name',
+        'last_name',
+    )
+    list_editable = ('role',)
+    search_fields = (
+        'username',
+    )
+    list_filter = (
+        'username',
+        'role',
+    )
 
 
 @admin.register(Review)

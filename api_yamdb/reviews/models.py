@@ -1,11 +1,11 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import (MaxValueValidator, MinValueValidator,
-                                    RegexValidator)
+from django.core.validators import (MaxValueValidator, MinValueValidator,)
 from django.db import models
 
-from .constants import (CHAR_OUTPUT_LIMIT, MAX_NAME_LENGTH, MAX_SLUG_LENGTH,
-                        ROLE_CHOICES, USER, ADMIN, MODERATOR)
+from .constants import (ADMIN, CHAR_OUTPUT_LIMIT, EMAIL_LENGTH,
+                        MAX_NAME_LENGTH, MAX_SLUG_LENGTH, MODERATOR,
+                        ROLE_CHOICES, USER, USERNAME_LENGTH)
 from .validators import username_validator
 
 
@@ -13,7 +13,7 @@ class APIUser(AbstractUser):
     """Модель пользователя."""
 
     role = models.CharField(
-        max_length=9,
+        max_length=max(len(role) for role, _ in ROLE_CHOICES),
         choices=ROLE_CHOICES,
         default=USER,
         verbose_name='Роль'
@@ -24,39 +24,29 @@ class APIUser(AbstractUser):
         verbose_name='Описание'
     )
     email = models.EmailField(
-        max_length=254,
+        max_length=EMAIL_LENGTH,
         unique=True,
         verbose_name='Электронная почта'
     )
 
     username = models.CharField(
-        max_length=150,
+        max_length=USERNAME_LENGTH,
         unique=True,
         blank=False,
         null=False,
-        validators=[
-            RegexValidator(
-                regex=r'^[\w.@+-]+\Z',
-                message='Недопустимые символы в username',
-            ),
-            username_validator,
-        ]
+        validators=[username_validator,]
     )
 
     @property
-    def is_user(self):
-        return self.role == USER
-
-    @property
     def is_admin(self):
-        return self.role == ADMIN
+        return self.role == ADMIN or self.is_staff
 
     @property
     def is_moderator(self):
         return self.role == MODERATOR
 
     class Meta:
-        ordering = ('id',)
+        ordering = ('username', 'id',)
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
         constraints = [

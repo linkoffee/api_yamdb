@@ -1,6 +1,12 @@
 # Ограничитель на длину заголовка:
 MAX_NAME_LENGTH = 256
 
+# Ограничитель длинны почты:
+EMAIL_LENGTH = 254
+
+# Ограничитель имён пользователей:
+USERNAME_LENGTH = 150
+
 # Ограничитель на длину slug:
 MAX_SLUG_LENGTH = 50
 
@@ -11,9 +17,11 @@ CHAR_OUTPUT_LIMIT = 20
 USER = 'user'
 ADMIN = 'admin'
 MODERATOR = 'moderator'
+SUPERUSER = 'superuser'
 
 ROLE_CHOICES = [
     (USER, USER),
     (ADMIN, ADMIN),
     (MODERATOR, MODERATOR),
+    (SUPERUSER, SUPERUSER),
 ]

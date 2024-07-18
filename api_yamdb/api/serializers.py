@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from reviews.models import Category, Comment, Genre, APIUser, Review, Title
+
+from reviews.models import APIUser, Category, Comment, Genre, Review, Title
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -101,7 +102,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class GetTokenSerializer(serializers.ModelSerializer):
+class GetTokenSerializer(serializers.Serializer):
     """Сериализатор для получения пользователем JWT-токена."""
 
     username = serializers.RegexField(
@@ -122,7 +123,7 @@ class GetTokenSerializer(serializers.ModelSerializer):
         )
 
 
-class CustomUserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     """Сериализатор под нужды администратора."""
 
     class Meta:
@@ -132,17 +133,14 @@ class CustomUserSerializer(serializers.ModelSerializer):
             'last_name', 'bio', 'role')
 
 
-class NotAdminSerializer(serializers.ModelSerializer):
+class NotAdminSerializer(UserSerializer):
     """Сериализатор для остальных пользователей."""
 
-    class Meta:
-        model = APIUser
-        fields = (
-            'username', 'email', 'first_name',
-            'last_name', 'bio', 'role')
+    class Meta(UserSerializer.Meta):
         read_only_fields = ('role',)
 
 
+# валятся тесты с serializers.Serializer
 class SignUpSerializer(serializers.ModelSerializer):
     """Сериализатор для регистрации."""
 

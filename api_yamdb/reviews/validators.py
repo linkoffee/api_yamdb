@@ -1,9 +1,18 @@
+import re
+
 from django.core.exceptions import ValidationError
 
 
 def username_validator(value):
-    if value == 'me':
+    # Проверка на запрещенные слова
+    forbidden_values = ('me',)
+    if value.lower() in forbidden_values:
+        raise ValidationError(f'Недопустимое имя пользователя: {value}')
+
+    # Проверка на запрещенные символы
+    forbidden_chars = re.sub(r'^[\w.@+-]+\Z', '', value)
+    if forbidden_chars:
         raise ValidationError(
-            ('Имя пользователя не может быть <me>.'),
-            params={'value': value},
-        )
+            f'Недопустимые символы в имени пользователя: {forbidden_chars}')
+
+    return value
