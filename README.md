@@ -96,8 +96,11 @@ pip install -r requirements.txt
 ```
 python3 manage.py migrate
 ```
-5. Запустить проект:
-<!-- Нужен пункт "как заполнить БД тестовыми данными". -->
+5. Заполнить БД данными:
+```
+python3 manage.py import_data
+```
+6. Запустить проект:
 ```
 python3 manage.py runserver
 ```
