@@ -62,9 +62,6 @@ class APIUser(AbstractUser):
         return self.username
 
 
-User = get_user_model()
-
-
 class BaseCategoryGenreModel(models.Model):
     """Абстрактная модель для категории и жанра."""
 

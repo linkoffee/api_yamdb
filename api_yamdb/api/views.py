@@ -1,6 +1,6 @@
 from django.contrib.auth.tokens import default_token_generator
-from django.shortcuts import get_object_or_404
 from django.db.models import Avg
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (filters, mixins, permissions, status, views,
                             viewsets)
@@ -11,18 +11,17 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from reviews.models import APIUser, Category, Comment, Genre, Review, Title
+from reviews.models import APIUser, Category, Genre, Review, Title
 from .email_func import send_code_to_email
 from .filters import TitleFilter
+from .mixins import CategoryGenreMixin
 from .permissions import (IsAdminOrReadOnly, IsAdminOrStaffPermission,
                           IsAuthorOrModerPermission)
 from .serializers import (CategorySerializer, CommentSerializer,
-                          CustomUserSerializer, GenreSerializer,
-                          GetTokenSerializer, NotAdminSerializer,
-                          ReviewSerializer, SignUpSerializer,
-                          TitleSerializerForRead, TitleSerializerForWrite,)
-from .filters import TitleFilter
-from .mixins import CategoryGenreMixin
+                          GenreSerializer, GetTokenSerializer,
+                          NotAdminSerializer, ReviewSerializer,
+                          SignUpSerializer, TitleSerializerForRead,
+                          TitleSerializerForWrite, UserSerializer)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -116,8 +115,7 @@ class APIUserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class SignupViewSet(mixins.CreateModelMixin,
-                    viewsets.GenericViewSet):
+class APISignup(views.APIView):
     # Избыточный родитель, тут достаточно APIView,
     # либо вообще функции с декоратором apiview.
     # Тоже и для токена.
