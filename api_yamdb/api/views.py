@@ -2,7 +2,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import (filters, mixins, permissions, status, views,
+from rest_framework import (filters, permissions, status, views,
                             viewsets)
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
