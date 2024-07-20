@@ -65,7 +65,8 @@ class TitleSerializerForWrite(serializers.ModelSerializer):
         return value
 
 
-# Лишний класс, который еще и делает лишний запрос в БД, не нужно получать произведение.
+# Лишний класс, который еще и делает лишний запрос в БД,
+# не нужно получать произведение.
 class CurrentTitleDefault:
 
     requires_context = True
