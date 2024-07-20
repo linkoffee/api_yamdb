@@ -1,11 +1,6 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from reviews.models import Category, Comment, Genre, MyUser, Review, Title
-# PEP8:  Импорты нужно отсортировать в правильном порядке с верху вниз:
-#  - импорты из стандартных библиотек
-#  - импорты сторонних библиотек (djando, rest_framework и т.д.)
-#  - импорты модулей этого проекта
-#  Между этими группами импортов должна быть пустая строка.
 
 
 class GenreSerializer(serializers.ModelSerializer):

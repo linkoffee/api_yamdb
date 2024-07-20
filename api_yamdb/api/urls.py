@@ -26,7 +26,7 @@ router.register('users', MyUserViewSet, basename='users')
 
 urlpatterns = [
     path('v1/', include(router.urls)),
-    path('v1/auth/signup/',  # Выносим одинаковые префиксы в отдельный список.
+    path('v1/auth/signup/',
          SignupViewSet.as_view({'post': 'post'}), name='signup'),
     path(
         'v1/auth/token/',

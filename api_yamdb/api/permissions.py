@@ -1,7 +1,7 @@
 from rest_framework import permissions
 
 
-class IsUserForSelfPermission(permissions.BasePermission):  # Для этого есть в ДРФ "заводской класс".
+class IsUserForSelfPermission(permissions.BasePermission):
     """Разрешает доступ только аутентифицированным пользователям."""
 
     def has_permission(self, request, view):
@@ -13,7 +13,7 @@ class IsAdminOrStaffPermission(permissions.BasePermission):
 
     def has_permission(self, request, view):
         return (
-            request.user.is_staff  # Убрать в свойство модели is_admin.
+            request.user.is_staff
             or (
                 request.user.is_authenticated
                 and request.user.is_admin)

@@ -76,7 +76,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user, title=title)
 
 
-# My Никогда и нигде не использовать эту приставку, так же как и Custom, это плохой тон.
 class MyUserViewSet(viewsets.ModelViewSet):
     """
     Управляет адресами, начинающимися с users/. Права доступа:
@@ -93,7 +92,6 @@ class MyUserViewSet(viewsets.ModelViewSet):
     search_fields = ('username', )
 
     @action(
-        # Лишний метод post, админ сделает свои дела по нику, а не в me. Так же и условие в 123 строке лишнее.
         methods=['GET', 'PATCH', 'POST'],
         detail=False,
         permission_classes=(IsUserForSelfPermission, IsAuthenticated),
@@ -119,7 +117,8 @@ class MyUserViewSet(viewsets.ModelViewSet):
 
 class SignupViewSet(mixins.CreateModelMixin,
                     viewsets.GenericViewSet):
-    # Избыточный родитель, тут достаточно APIView, либо вообще функции с декоратором apiview.
+    # Избыточный родитель, тут достаточно APIView,
+    # либо вообще функции с декоратором apiview.
     # Тоже и для токена.
     # Так же в обоих этих классах должно быть всего 4 строки:
     # - передать в сериализатор данные
@@ -138,7 +137,6 @@ class SignupViewSet(mixins.CreateModelMixin,
     permission_classes = (permissions.AllowAny,)
 
     @staticmethod
-    # Это тут всё зачем? Есть же функция для отправки, в файле utils.
     def send_email(username, confirmation_code, email):
         email = EmailMessage(
             subject='Код подтвержения для доступа к API!',
@@ -156,7 +154,7 @@ class SignupViewSet(mixins.CreateModelMixin,
             username=request.data.get('username')
         ).exists():
             serializer = SignUpSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)  # ОТЛИЧНО!
+            serializer.is_valid(raise_exception=True)
             user = serializer.save()
             confirmation_code = default_token_generator.make_token(user)
             self.send_email(user.username, confirmation_code, user.email)

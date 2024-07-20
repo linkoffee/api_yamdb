@@ -114,20 +114,7 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
 }
 
-DJOSER = {  # Это лишнее.
-    'PASSWORD_RESET_CONFIRM_URL': '#/password/reset/confirm/{uid}/{token}',
-    'USERNAME_RESET_CONFIRM_URL': '#/username/reset/confirm/{uid}/{token}',
-    'ACTIVATION_URL': '#/activate/{uid}/{token}',
-    'ACCOUNT_ACTIVATION_URL': 'http://127.0.0.1:8000/api/v1/auth/signup/',
-    'SEND_ACTIVATION_EMAIL': True,
-    'SERIALIZERS': {
-        # 'user_create': 'djoser.serializers.UserCreateSerializer'
-        'user_create': 'djoser.serializers.UserCreateSerializer',
-        'user': 'api.serializers.CustomUserSerializer',
-    },
-}
-
-SIMPLE_JWT = {  # Большая часть лишняя, нужно только указать время жизни токена, а так же его тип. Так же исправить неконсистентность кавычек ниже.
+SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "ROTATE_REFRESH_TOKENS": False,
