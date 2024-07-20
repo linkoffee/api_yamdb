@@ -149,7 +149,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    """Сериализатор данных модели комментариев."""
+    """Сериализатор данных для модели комментариев."""
 
     author = serializers.SlugRelatedField(read_only=True,
                                           slug_field='username')
