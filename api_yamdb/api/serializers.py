@@ -27,21 +27,13 @@ class TitleSerializerForRead(serializers.ModelSerializer):
 
     genre = GenreSerializer(many=True)
     category = CategorySerializer(read_only=True)
-    rating = serializers.SerializerMethodField()
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Title
-        fields = '__all__'
-
-    def get_rating(self, obj):
-        scores = Review.objects.filter(title_id=obj).values_list(
-            'score',
-            flat=True
+        fields = (
+            'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
         )
-        if not scores:
-            return None
-        rating_sum = sum(scores)
-        return rating_sum / len(scores)
 
 
 class TitleSerializerForWrite(serializers.ModelSerializer):
@@ -56,14 +48,24 @@ class TitleSerializerForWrite(serializers.ModelSerializer):
         queryset=Genre.objects.all(),
         many=True,
         slug_field='slug',
-        required=True
+        allow_null=False,
+        allow_empty=False
     )
 
     class Meta:
         model = Title
         fields = '__all__'
 
+    def validate_genre(self, value):
+        """Проверка, что поле жанра не пустое."""
+        if not value:
+            raise serializers.ValidationError(
+                'Поле "genre" не может быть пустым.'
+            )
+        return value
 
+
+# Лишний класс, который еще и делает лишний запрос в БД, не нужно получать произведение.
 class CurrentTitleDefault:
 
     requires_context = True
@@ -91,13 +93,12 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         request = self.context['request']
-        title = get_object_or_404(
-            Title,
-            id=self.context['request'].parser_context['kwargs']['title_id']
-        )
         if request.method == 'POST':
-            if Review.objects.filter(author=self.context['request'].user,
-                                     title=title).exists():
+            if Review.objects.filter(
+                    author=self.context['request'].user,
+                    title=self.context['request'].parser_context['kwargs']
+                    ['title_id']
+            ).exists():
                 raise serializers.ValidationError('Отзыв уже оставлен')
         return attrs
 

@@ -1,11 +1,11 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
+from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (filters, mixins, permissions, status, views,
                             viewsets)
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -17,27 +17,23 @@ from .filters import TitleFilter
 from .permissions import (IsAdminOrReadOnly, IsAdminOrStaffPermission,
                           IsAuthorOrModerPermission)
 from .serializers import (CategorySerializer, CommentSerializer,
-                          GenreSerializer, GetTokenSerializer,
-                          NotAdminSerializer, ReviewSerializer,
-                          SignUpSerializer, TitleSerializerForRead,
-                          TitleSerializerForWrite, UserSerializer)
+                          CustomUserSerializer, GenreSerializer,
+                          GetTokenSerializer, NotAdminSerializer,
+                          ReviewSerializer, SignUpSerializer,
+                          TitleSerializerForRead, TitleSerializerForWrite,)
+from .filters import TitleFilter
+from .mixins import CategoryGenreMixin
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Viewset модели произведения."""
 
-    queryset = Title.objects.all()
+    queryset = Title.objects.annotate(rating=Avg('reviews__score')).all()
     permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (DjangoFilterBackend,)
+    filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
     filterset_class = TitleFilter
-
-    def update(self, request, *args, **kwargs):
-        if request.method == 'PUT':
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().update(request, *args, **kwargs)
-
-    def partial_update(self, request, *args, **kwargs):
-        return super().partial_update(request, *args, **kwargs)
+    ordering_fields = ('id', 'name', 'year')
+    http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_serializer_class(self):
         if self.action in ('create', 'partial_update'):
@@ -45,54 +41,40 @@ class TitleViewSet(viewsets.ModelViewSet):
         return TitleSerializerForRead
 
 
-class GenreViewSet(mixins.CreateModelMixin,
-                   mixins.ListModelMixin,
-                   mixins.DestroyModelMixin,
-                   viewsets.GenericViewSet):
+class GenreViewSet(CategoryGenreMixin):
     """Viewset модели жанра."""
 
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    pagination_class = PageNumberPagination
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
-    permission_classes = (IsAdminOrReadOnly,)
 
 
-class CategoryViewSet(mixins.CreateModelMixin,
-                      mixins.ListModelMixin,
-                      mixins.DestroyModelMixin,
-                      viewsets.GenericViewSet):
+class CategoryViewSet(CategoryGenreMixin):
     """Viewset модели категории."""
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    pagination_class = PageNumberPagination
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
-    permission_classes = (IsAdminOrReadOnly,)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     """Viewset модели отзывов."""
 
     serializer_class = ReviewSerializer
-    http_method_names = ['get', 'post', 'patch', 'delete']
+    http_method_names = ('get', 'post', 'patch', 'delete')
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,
                           IsAuthorOrModerPermission,)
 
+    def get_title(self):
+        """Получаем произведение для отзыва."""
+        return get_object_or_404(Title, pk=self.kwargs['title_id'])
+
     def get_queryset(self):
         """Получаем отзывы к конкретному произведению."""
-
-        title = get_object_or_404(Title, pk=self.kwargs['title_id'])
-        return Review.objects.filter(title=title)
+        title = self.get_title()
+        return title.reviews.all()
 
     def perform_create(self, serializer):
         """Добавляем авторизованного пользователя к отзыву."""
-
-        title = get_object_or_404(Title, pk=self.kwargs['title_id'])
+        title = self.get_title()
         serializer.save(author=self.request.user, title=title)
 
 
@@ -134,7 +116,17 @@ class APIUserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class APISignup(views.APIView):
+class SignupViewSet(mixins.CreateModelMixin,
+                    viewsets.GenericViewSet):
+    # Избыточный родитель, тут достаточно APIView,
+    # либо вообще функции с декоратором apiview.
+    # Тоже и для токена.
+    # Так же в обоих этих классах должно быть всего 4 строки:
+    # - передать в сериализатор данные
+    # - проверить валидность
+    # - записать
+    # - вернуть Response
+    # Всё остальное (создание и валидация) должно быть в сериализаторе.
     """
     Получить код подтверждения на переданный email.
     Права доступа: Доступно без токена.
@@ -198,18 +190,20 @@ class CommentViewSet(viewsets.ModelViewSet):
     """Viewset модели комментариев."""
 
     serializer_class = CommentSerializer
-    http_method_names = ['get', 'post', 'patch', 'delete']
+    http_method_names = ('get', 'post', 'patch', 'delete')
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,
                           IsAuthorOrModerPermission,)
 
+    def get_review(self):
+        """Получаем отзыв для комментария."""
+        return get_object_or_404(Review, pk=self.kwargs['review_id'])
+
     def get_queryset(self):
         """Получаем комментарии к конкретному отзыву."""
-
-        review = get_object_or_404(Review, pk=self.kwargs['review_id'])
-        return Comment.objects.filter(review=review)
+        review = self.get_review()
+        return review.comments.all()
 
     def perform_create(self, serializer):
         """Присваиваем автора комментарию."""
-
-        review = get_object_or_404(Review, pk=self.kwargs['review_id'])
+        review = self.get_review()
         serializer.save(author=self.request.user, review=review)

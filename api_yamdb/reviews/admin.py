@@ -14,6 +14,7 @@ class TitleAdmin(admin.ModelAdmin):
         'year',
         'description',
         'category',
+        'get_genres',
     )
     list_editable = (
         'description',
@@ -21,12 +22,17 @@ class TitleAdmin(admin.ModelAdmin):
     search_fields = (
         'name',
         'year',
-        'genre',
         'category',
     )
     list_filter = (
         'name',
     )
+
+    @admin.display(description='Жанры произведения')
+    def get_genres(self, obj):
+        """Получает все жанры через запятую."""
+
+        return ', '.join([genre.name for genre in obj.genre.all()])
 
 
 @admin.register(Category)
