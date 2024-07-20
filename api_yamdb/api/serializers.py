@@ -1,4 +1,3 @@
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from reviews.models import APIUser, Category, Comment, Genre, Review, Title
@@ -63,20 +62,6 @@ class TitleSerializerForWrite(serializers.ModelSerializer):
                 'Поле "genre" не может быть пустым.'
             )
         return value
-
-
-# Лишний класс, который еще и делает лишний запрос в БД,
-# не нужно получать произведение.
-class CurrentTitleDefault:
-
-    requires_context = True
-
-    def __call__(self, serializer_field):
-        title_id = serializer_field.context['view'].kwargs.get('title_id')
-        return get_object_or_404(Title, id=title_id)
-
-    def __repr__(self):
-        return '%s()' % self.__class__.__name__
 
 
 class ReviewSerializer(serializers.ModelSerializer):

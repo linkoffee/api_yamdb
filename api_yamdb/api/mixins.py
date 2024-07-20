@@ -5,14 +5,6 @@ from rest_framework.pagination import PageNumberPagination
 from .permissions import IsAdminOrReadOnly
 
 
-# Почему ViewSet в файле для mixin?
-class CreateListDestroyViewSet(mixins.CreateModelMixin,
-                               mixins.ListModelMixin,
-                               mixins.DestroyModelMixin,
-                               viewsets.GenericViewSet):
-    pass
-
-
 class CategoryGenreMixin(mixins.CreateModelMixin,
                          mixins.ListModelMixin,
                          mixins.DestroyModelMixin,
