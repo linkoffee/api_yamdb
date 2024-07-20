@@ -1,4 +1,3 @@
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import (MaxValueValidator, MinValueValidator,)
 from django.db import models
@@ -58,9 +57,6 @@ class APIUser(AbstractUser):
 
     def __str__(self):
         return self.username
-
-
-User = get_user_model()
 
 
 class Category(models.Model):
@@ -159,7 +155,7 @@ class Review(models.Model):
         verbose_name='Текст отзыва'
     )
     author = models.ForeignKey(
-        User,
+        APIUser,
         on_delete=models.CASCADE,
         related_name='reviews',
         verbose_name='Автор'
@@ -202,7 +198,7 @@ class Comment(models.Model):
         verbose_name='Текст комментария'
     )
     author = models.ForeignKey(
-        User,
+        APIUser,
         on_delete=models.CASCADE,
         related_name='comments',
         verbose_name='Автор'

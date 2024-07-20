@@ -141,7 +141,6 @@ class APISignup(views.APIView):
     Использовать имя 'me' в качестве username запрещено.
     Поля email и username должны быть уникальными.
     """
-
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
@@ -174,8 +173,6 @@ class APITokenObtainView(TokenObtainPairView):  # APIView тот же самый
     def post(self, request):
         serializer = GetTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        # толку-то мне от этих отлично,
-        # если вокруг всё непонятно как переделывать
         data = serializer.validated_data
         if not APIUser.objects.filter(  # <- ну не могу перетаскивать,
             # ну тесты падают Key Error
