@@ -1,6 +1,6 @@
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from reviews.models import Category, Comment, Genre, MyUser, Review, Title
+
+from reviews.models import APIUser, Category, Comment, Genre, Review, Title
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -26,21 +26,13 @@ class TitleSerializerForRead(serializers.ModelSerializer):
 
     genre = GenreSerializer(many=True)
     category = CategorySerializer(read_only=True)
-    rating = serializers.SerializerMethodField()
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Title
-        fields = '__all__'
-
-    def get_rating(self, obj):
-        scores = Review.objects.filter(title_id=obj).values_list(
-            'score',
-            flat=True
+        fields = (
+            'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
         )
-        if not scores:
-            return None
-        rating_sum = sum(scores)
-        return rating_sum / len(scores)
 
 
 class TitleSerializerForWrite(serializers.ModelSerializer):
@@ -55,24 +47,21 @@ class TitleSerializerForWrite(serializers.ModelSerializer):
         queryset=Genre.objects.all(),
         many=True,
         slug_field='slug',
-        required=True
+        allow_null=False,
+        allow_empty=False
     )
 
     class Meta:
         model = Title
         fields = '__all__'
 
-
-class CurrentTitleDefault:
-
-    requires_context = True
-
-    def __call__(self, serializer_field):
-        title_id = serializer_field.context['view'].kwargs.get('title_id')
-        return get_object_or_404(Title, id=title_id)
-
-    def __repr__(self):
-        return '%s()' % self.__class__.__name__
+    def validate_genre(self, value):
+        """Проверка, что поле жанра не пустое."""
+        if not value:
+            raise serializers.ValidationError(
+                'Поле "genre" не может быть пустым.'
+            )
+        return value
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -90,18 +79,17 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         request = self.context['request']
-        title = get_object_or_404(
-            Title,
-            id=self.context['request'].parser_context['kwargs']['title_id']
-        )
         if request.method == 'POST':
-            if Review.objects.filter(author=self.context['request'].user,
-                                     title=title).exists():
+            if Review.objects.filter(
+                    author=self.context['request'].user,
+                    title=self.context['request'].parser_context['kwargs']
+                    ['title_id']
+            ).exists():
                 raise serializers.ValidationError('Отзыв уже оставлен')
         return attrs
 
 
-class GetTokenSerializer(serializers.ModelSerializer):
+class GetTokenSerializer(serializers.Serializer):
     """Сериализатор для получения пользователем JWT-токена."""
 
     username = serializers.RegexField(
@@ -115,39 +103,36 @@ class GetTokenSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = MyUser
+        model = APIUser
         fields = (
             'username',
             'confirmation_code'
         )
 
 
-class CustomUserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     """Сериализатор под нужды администратора."""
 
     class Meta:
-        model = MyUser
+        model = APIUser
         fields = (
             'username', 'email', 'first_name',
             'last_name', 'bio', 'role')
 
 
-class NotAdminSerializer(serializers.ModelSerializer):
+class NotAdminSerializer(UserSerializer):
     """Сериализатор для остальных пользователей."""
 
-    class Meta:
-        model = MyUser
-        fields = (
-            'username', 'email', 'first_name',
-            'last_name', 'bio', 'role')
+    class Meta(UserSerializer.Meta):
         read_only_fields = ('role',)
 
 
+# валятся тесты с serializers.Serializer
 class SignUpSerializer(serializers.ModelSerializer):
     """Сериализатор для регистрации."""
 
     class Meta:
-        model = MyUser
+        model = APIUser
         fields = ('email', 'username')
 
     def validate(self, data):
@@ -155,8 +140,8 @@ class SignUpSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Использовать имя me запрещено'
             )
-        if MyUser.objects.filter(username=data.get('username')):
-            if not MyUser.objects.filter(email=data.get('email')):
+        if APIUser.objects.filter(username=data.get('username')):
+            if not APIUser.objects.filter(email=data.get('email')):
                 raise serializers.ValidationError(
                     'Указан неверный email'
                 )
