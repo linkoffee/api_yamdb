@@ -10,9 +10,6 @@ from .constants import (CHAR_OUTPUT_LIMIT, MAX_NAME_LENGTH, MAX_SCORE,
 from .validators import username_validator
 
 
-User = get_user_model()
-
-
 class MyUser(AbstractUser):
     """Модель пользователя."""
     role = models.CharField(
@@ -67,6 +64,9 @@ class MyUser(AbstractUser):
 
     def __str__(self):
         return self.username
+
+
+User = get_user_model()
 
 
 class BaseCategoryGenreModel(models.Model):
