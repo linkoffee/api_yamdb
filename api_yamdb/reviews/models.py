@@ -36,7 +36,7 @@ class APIUser(AbstractUser):
         unique=True,
         blank=False,
         null=False,
-        validators=[username_validator,]
+        validators=[username_validator]
     )
 
     @property
