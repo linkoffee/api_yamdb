@@ -11,7 +11,7 @@ from .constants import (CHAR_OUTPUT_LIMIT, MAX_NAME_LENGTH, MAX_SCORE,
 from .validators import username_validator
 
 
-class APIUser(AbstractUser):
+class APIUser(AbstractUser):  # Какое отношение админка и модели имеют к апи? Исправить и имя модели и админки.
     """Модель пользователя."""
 
     role = models.CharField(
@@ -34,7 +34,7 @@ class APIUser(AbstractUser):
     username = models.CharField(
         max_length=USERNAME_LENGTH,
         unique=True,
-        blank=False,
+        blank=False,  # Это значение по умолчанию, его писать не нужно нигде. Как и 38 строка.
         null=False,
         validators=[username_validator]
     )
@@ -49,7 +49,7 @@ class APIUser(AbstractUser):
 
     class Meta:
         ordering = ('username', 'id',)
-        verbose_name = "Пользователь"
+        verbose_name = "Пользователь"  # Неконсистентные кавычки. Все кавычки в файле должны быть одного типа, кроме вложенных (у докстрингс кавычки всегда двойные).
         verbose_name_plural = "Пользователи"
         constraints = [
             models.UniqueConstraint(

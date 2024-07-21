@@ -55,14 +55,6 @@ class TitleSerializerForWrite(serializers.ModelSerializer):
         model = Title
         fields = '__all__'
 
-    def validate_genre(self, value):
-        """Проверка, что поле жанра не пустое."""
-        if not value:
-            raise serializers.ValidationError(
-                'Поле "genre" не может быть пустым.'
-            )
-        return value
-
 
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериализатор данных модели отзывов."""
@@ -94,7 +86,7 @@ class GetTokenSerializer(serializers.Serializer):
 
     username = serializers.RegexField(
         regex=r'^[\w.@+-]+$',
-        max_length=150,
+        max_length=150,  # Все настройки длины выносим в файл с константами (не settings), для многих полей они будут одинаковыми, не повторяемся.
         required=True
     )
     confirmation_code = serializers.CharField(

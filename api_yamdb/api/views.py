@@ -3,10 +3,11 @@ from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (filters, permissions, status, views,
-                            viewsets)
+                            viewsets, mixins)
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -14,7 +15,6 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from reviews.models import APIUser, Category, Genre, Review, Title
 from .email_func import send_code_to_email
 from .filters import TitleFilter
-from .mixins import CategoryGenreMixin
 from .permissions import (IsAdminOrReadOnly, IsAdminOrStaffPermission,
                           IsAuthorOrModerPermission)
 from .serializers import (CategorySerializer, CommentSerializer,
@@ -25,7 +25,7 @@ from .serializers import (CategorySerializer, CommentSerializer,
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    """Viewset модели произведения."""
+    """ViewSet модели произведения."""
 
     queryset = Title.objects.annotate(rating=Avg('reviews__score')).all()
     permission_classes = (IsAdminOrReadOnly,)
@@ -40,22 +40,35 @@ class TitleViewSet(viewsets.ModelViewSet):
         return TitleSerializerForRead
 
 
-class GenreViewSet(CategoryGenreMixin):
-    """Viewset модели жанра."""
+class CategoryGenreViewSet(mixins.CreateModelMixin,
+                           mixins.ListModelMixin,
+                           mixins.DestroyModelMixin,
+                           viewsets.GenericViewSet):
+    """Базовый ViewSet для категории и жанра."""
+
+    pagination_class = PageNumberPagination
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
+    permission_classes = (IsAdminOrReadOnly,)
+
+
+class GenreViewSet(CategoryGenreViewSet):
+    """ViewSet модели жанра."""
 
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
 
-class CategoryViewSet(CategoryGenreMixin):
-    """Viewset модели категории."""
+class CategoryViewSet(CategoryGenreViewSet):
+    """ViewSet модели категории."""
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    """Viewset модели отзывов."""
+    """ViewSet модели отзывов."""
 
     serializer_class = ReviewSerializer
     http_method_names = ('get', 'post', 'patch', 'delete')
@@ -73,7 +86,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """Добавляем авторизованного пользователя к отзыву."""
-        title = self.get_title()
+        title = self.get_title()  # 84 и 89 строка - лишняя переменная, потому что одноразовая, можно сразу возвращать результат.
         serializer.save(author=self.request.user, title=title)
 
 
@@ -88,7 +101,7 @@ class APIUserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = (IsAdminOrStaffPermission,)
     lookup_field = 'username'
-    http_method_names = ['get', 'post', 'patch', 'delete']
+    http_method_names = ['get', 'post', 'patch', 'delete']  # Поменять на кортеж. Исправить везде, где используется список.
     filter_backends = (SearchFilter, )
     search_fields = ('username', )
 
@@ -99,7 +112,7 @@ class APIUserViewSet(viewsets.ModelViewSet):
         url_path='me')
     def get_current_user_info(self, request):
         serializer = UserSerializer(request.user)
-        if request.method == 'PATCH':
+        if request.method == 'PATCH':  # У @action, есть "брат" .mapping. с его помощью можно реализовать патч метод: https://stackoverflow.com/questions/62084905/how-to-make-delete-method-in-django-extra-action
             if request.user.is_admin:
                 serializer = UserSerializer(
                     request.user,
@@ -134,7 +147,7 @@ class APISignup(views.APIView):
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
-        if not APIUser.objects.filter(
+        if not APIUser.objects.filter(  # Повторю еще раз, тут должно быть 4 строки, см. выше.
             username=request.data.get('username')
         ).exists():
             serializer = SignUpSerializer(data=request.data)  # <-
@@ -161,7 +174,7 @@ class APITokenObtainView(TokenObtainPairView):  # APIView тот же самый
     """
 
     def post(self, request):
-        serializer = GetTokenSerializer(data=request.data)
+        serializer = GetTokenSerializer(data=request.data)  # Повторю еще раз, тут должно быть 4 строки, см. выше.
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
         if not APIUser.objects.filter(  # <- ну не могу перетаскивать,
@@ -203,5 +216,5 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """Присваиваем автора комментарию."""
-        review = self.get_review()
+        review = self.get_review()  # 214, 219 строки - лишняя переменная, потому что одноразовая, можно сразу возвращать результат.
         serializer.save(author=self.request.user, review=review)
