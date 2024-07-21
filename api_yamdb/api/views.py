@@ -81,13 +81,13 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Получаем отзывы к конкретному произведению."""
-        title = self.get_title()
-        return title.reviews.all()
+        # title = self.get_title()
+        return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
         """Добавляем авторизованного пользователя к отзыву."""
-        title = self.get_title()  # 84 и 89 строка - лишняя переменная, потому что одноразовая, можно сразу возвращать результат.
-        serializer.save(author=self.request.user, title=title)
+        # title = self.get_title()  # 84 и 89 строка - лишняя переменная, потому что одноразовая, можно сразу возвращать результат.
+        serializer.save(author=self.request.user, title=self.get_title())
 
 
 class APIUserViewSet(viewsets.ModelViewSet):
@@ -211,10 +211,10 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Получаем комментарии к конкретному отзыву."""
-        review = self.get_review()
-        return review.comments.all()
+        # review = self.get_review()
+        return self.get_review().comments.all()
 
     def perform_create(self, serializer):
         """Присваиваем автора комментарию."""
-        review = self.get_review()  # 214, 219 строки - лишняя переменная, потому что одноразовая, можно сразу возвращать результат.
-        serializer.save(author=self.request.user, review=review)
+        # review = self.get_review()  # 214, 219 строки - лишняя переменная, потому что одноразовая, можно сразу возвращать результат.
+        serializer.save(author=self.request.user, review=self.get_review())
