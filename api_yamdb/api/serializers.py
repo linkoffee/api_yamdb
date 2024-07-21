@@ -55,6 +55,10 @@ class TitleSerializerForWrite(serializers.ModelSerializer):
         model = Title
         fields = '__all__'
 
+    def to_representation(self, instance):
+        serializer = TitleSerializerForRead(instance)
+        return serializer.data
+
 
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериализатор данных модели отзывов."""
@@ -86,7 +90,8 @@ class GetTokenSerializer(serializers.Serializer):
 
     username = serializers.RegexField(
         regex=r'^[\w.@+-]+$',
-        max_length=150,  # Все настройки длины выносим в файл с константами (не settings), для многих полей они будут одинаковыми, не повторяемся.
+        # Все настройки длины выносим в файл с константами (не settings), для многих полей они будут одинаковыми, не повторяемся.
+        max_length=150,
         required=True
     )
     confirmation_code = serializers.CharField(
