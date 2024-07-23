@@ -13,7 +13,7 @@ FOREIGN_KEY_FIELDS = ('author', 'category')
 
 # Словарь соответствий модели и csv-файла
 MODEL_AND_CSV_MATCHING = {
-    models.User: 'users.csv',
+    models.APIUser: 'users.csv',
     models.Genre: 'genre.csv',
     models.Category: 'category.csv',
     models.Title: 'titles.csv',

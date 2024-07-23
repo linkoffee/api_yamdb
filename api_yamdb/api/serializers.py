@@ -62,25 +62,9 @@ class TitleSerializerForWrite(serializers.ModelSerializer):
         model = Title
         fields = '__all__'
 
-    def validate_genre(self, value):
-        """Проверка, что поле жанра не пустое."""
-        if not value:
-            raise serializers.ValidationError(
-                'Поле "genre" не может быть пустым.'
-            )
-        return value
-
-
-class CurrentTitleDefault:
-
-    requires_context = True
-
-    def __call__(self, serializer_field):
-        title_id = serializer_field.context['view'].kwargs.get('title_id')
-        return get_object_or_404(Title, id=title_id)
-
-    def __repr__(self):
-        return '%s()' % self.__class__.__name__
+    def to_representation(self, instance):
+        serializer = TitleSerializerForRead(instance)
+        return serializer.data
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -197,7 +181,7 @@ class SignUpSerializer(serializers.Serializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    """Сериализатор данных модели комментариев."""
+    """Сериализатор данных для модели комментариев."""
 
     author = serializers.SlugRelatedField(read_only=True,
                                           slug_field='username')
