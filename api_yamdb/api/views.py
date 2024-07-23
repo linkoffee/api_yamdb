@@ -4,6 +4,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (filters, permissions, status, views,
                             viewsets, mixins)
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
@@ -176,3 +177,9 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Присваиваем автора комментарию."""
         serializer.save(author=self.request.user, review=self.get_review())
+
+    def perform_destroy(self, instance):
+        """Удаляем комментарий только автором или модератором."""
+        if (instance.author == self.request.user
+                or self.request.user.is_staff):
+            instance.delete()
