@@ -2,7 +2,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.constants import EMAIL_LENGTH, USER, USERNAME_LENGTH
 from reviews.models import Category, Comment, Genre, Review, Title, User
@@ -120,7 +120,7 @@ class GetTokenSerializer(serializers.Serializer):
         user = validated_data['user']
         user.is_active = True
         user.save()
-        return AccessToken.for_user(user)
+        return str(RefreshToken.for_user(user).access_token)
 
 
 class UserSerializer(serializers.ModelSerializer):
