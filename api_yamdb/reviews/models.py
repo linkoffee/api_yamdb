@@ -1,17 +1,17 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import (MaxValueValidator, MinValueValidator,)
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.utils import timezone
+from django.core.validators import (MaxValueValidator, MinValueValidator)
 from django.db import models
 
 from .constants import (ADMIN, CHAR_OUTPUT_LIMIT, EMAIL_LENGTH,
-                        MAX_NAME_LENGTH, MAX_SLUG_LENGTH, MODERATOR,
-                        ROLE_CHOICES, USER, USERNAME_LENGTH)
-from .constants import (CHAR_OUTPUT_LIMIT, MAX_NAME_LENGTH, MAX_SCORE,
-                        MAX_SLUG_LENGTH, MIN_SCORE, MIN_YEAR, CURRENT_YEAR,
-                        ROLE_CHOICES)
+                        MAX_NAME_LENGTH, MAX_SCORE, MAX_SLUG_LENGTH, MIN_SCORE,
+                        MIN_YEAR, MODERATOR, ROLE_CHOICES, USER,
+                        USERNAME_LENGTH)
 from .validators import username_validator
 
 
-class APIUser(AbstractUser):
+class User(AbstractUser):
     """Модель пользователя."""
 
     role = models.CharField(
@@ -34,9 +34,7 @@ class APIUser(AbstractUser):
     username = models.CharField(
         max_length=USERNAME_LENGTH,
         unique=True,
-        blank=False,
-        null=False,
-        validators=[username_validator]
+        validators=[username_validator,]
     )
 
     @property
@@ -49,8 +47,8 @@ class APIUser(AbstractUser):
 
     class Meta:
         ordering = ('username', 'id',)
-        verbose_name = "Пользователь"
-        verbose_name_plural = "Пользователи"
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
         constraints = [
             models.UniqueConstraint(
                 fields=['username', 'email'],
@@ -62,7 +60,7 @@ class APIUser(AbstractUser):
         return self.username
 
 
-class BaseCategoryGenreModel(models.Model):
+class NameSlugModel(models.Model):
     """Абстрактная модель для категории и жанра."""
 
     name = models.CharField(
@@ -85,18 +83,18 @@ class BaseCategoryGenreModel(models.Model):
         return self.name[:CHAR_OUTPUT_LIMIT]
 
 
-class Category(BaseCategoryGenreModel):
+class Category(NameSlugModel):
     """Модель категории."""
 
-    class Meta(BaseCategoryGenreModel.Meta):
+    class Meta(NameSlugModel.Meta):
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
 
 
-class Genre(BaseCategoryGenreModel):
+class Genre(NameSlugModel):
     """Модель жанра."""
 
-    class Meta(BaseCategoryGenreModel.Meta):
+    class Meta(NameSlugModel.Meta):
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
 
@@ -111,7 +109,7 @@ class Title(models.Model):
     year = models.SmallIntegerField(
         validators=(
             MinValueValidator(MIN_YEAR),
-            MaxValueValidator(CURRENT_YEAR)
+            MaxValueValidator(timezone.now().year)
         ),
         db_index=True,
         verbose_name='Год создания произведения'
@@ -134,6 +132,7 @@ class Title(models.Model):
     )
 
     class Meta:
+        ordering = ('name',)
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
 
@@ -146,7 +145,7 @@ class BaseReviewCommentModel(models.Model):
 
     text = models.TextField(verbose_name='Текст')
     author = models.ForeignKey(
-        APIUser,
+        User,
         on_delete=models.CASCADE,
         verbose_name='Автор'
     )
