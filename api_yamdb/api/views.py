@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
 from reviews.models import Category, Genre, Review, Title, User
@@ -150,7 +151,6 @@ class APITokenObtainView(views.APIView):
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
-        # Повторю еще раз, тут должно быть 4 строки, см. выше.
         serializer = GetTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         token = serializer.save()
