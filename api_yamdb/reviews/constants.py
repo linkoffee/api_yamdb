@@ -23,15 +23,12 @@ MIN_SCORE = 1
 MAX_SCORE = 10
 
 # Роли пользователей:
-USER = 'user'  # падает всё почти
+USER = 'user'
 ADMIN = 'admin'
 MODERATOR = 'moderator'
-# Это зачем? У пользователя есть свойство супер пользователя, нужно использовать его, а не придумывать константы.
-SUPERUSER = 'superuser'
 
 ROLE_CHOICES = (
-    (USER, USER),  # Правую часть нужно русифицировать.
+    (USER, USER),
     (ADMIN, ADMIN),
     (MODERATOR, MODERATOR),
-    (SUPERUSER, SUPERUSER),  # Лишняя строка.
 )

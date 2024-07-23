@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Category, Comment, Genre, APIUser, Review, Title
+from .models import Category, Comment, Genre, User, Review, Title
 
 admin.site.empty_value_display = 'Здесь пока ничего нет:('
 
@@ -75,8 +75,8 @@ class GenreAdmin(admin.ModelAdmin):
     )
 
 
-@admin.register(APIUser)
-class APIUserAdmin(admin.ModelAdmin):
+@admin.register(User)
+class UserAdmin(admin.ModelAdmin):
     """Админ панель пользователя."""
     list_display = (
         'username',

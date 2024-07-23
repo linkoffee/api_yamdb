@@ -1,6 +1,13 @@
+from django.contrib.auth.tokens import default_token_generator
+from django.db import IntegrityError
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
+from rest_framework_simplejwt.tokens import AccessToken
 
-from reviews.models import APIUser, Category, Comment, Genre, Review, Title
+from reviews.constants import EMAIL_LENGTH, USER, USERNAME_LENGTH
+from reviews.models import Category, Comment, Genre, Review, Title, User
+from reviews.validators import username_validator
+from .email_func import send_code_to_email
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -90,28 +97,37 @@ class GetTokenSerializer(serializers.Serializer):
 
     username = serializers.RegexField(
         regex=r'^[\w.@+-]+$',
-        # Все настройки длины выносим в файл с константами (не settings), для многих полей они будут одинаковыми, не повторяемся.
-        max_length=150,
+        max_length=USERNAME_LENGTH,
         required=True
     )
     confirmation_code = serializers.CharField(
-        max_length=150,
+        max_length=USERNAME_LENGTH,
         required=True
     )
 
-    class Meta:
-        model = APIUser
-        fields = (
-            'username',
-            'confirmation_code'
-        )
+    def validate(self, data):
+        username = data.get('username')
+        user = get_object_or_404(User, username=username)
+        if not default_token_generator.check_token(
+            user,
+            data.get('confirmation_code')
+        ):
+            raise serializers.ValidationError('Неверный код')
+        data['user'] = user
+        return data
+
+    def create(self, validated_data):
+        user = validated_data['user']
+        user.is_active = True
+        user.save()
+        return AccessToken.for_user(user)
 
 
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор под нужды администратора."""
 
     class Meta:
-        model = APIUser
+        model = User
         fields = (
             'username', 'email', 'first_name',
             'last_name', 'bio', 'role')
@@ -124,25 +140,44 @@ class NotAdminSerializer(UserSerializer):
         read_only_fields = ('role',)
 
 
-# валятся тесты с serializers.Serializer
-class SignUpSerializer(serializers.ModelSerializer):
+class SignUpSerializer(serializers.Serializer):
     """Сериализатор для регистрации."""
 
-    class Meta:
-        model = APIUser
-        fields = ('email', 'username')
+    username = serializers.CharField(
+        max_length=USERNAME_LENGTH,
+        validators=[
+            username_validator,
+        ],
+    )
+    email = serializers.EmailField(
+        max_length=EMAIL_LENGTH,
+    )
 
     def validate(self, data):
-        if data.get('username') == 'me':
-            raise serializers.ValidationError(
-                'Использовать имя me запрещено'
+        try:
+            User.objects.get_or_create(
+                username=data.get('username'),
+                email=data.get('email')
             )
-        if APIUser.objects.filter(username=data.get('username')):
-            if not APIUser.objects.filter(email=data.get('email')):
-                raise serializers.ValidationError(
-                    'Указан неверный email'
-                )
+        except IntegrityError:
+            raise serializers.ValidationError(
+                'Такой пользователь уже существует'
+            )
         return data
+
+    def create(self, validated_data):
+        username = validated_data['username']
+        email = validated_data['email']
+
+        user, created = User.objects.get_or_create(
+            username=username,
+            email=email,
+            defaults={'role': USER}
+        )
+        user.save()
+
+        send_code_to_email(user)
+        return user
 
 
 class CommentSerializer(serializers.ModelSerializer):

@@ -13,6 +13,7 @@ def username_validator(value):
     forbidden_chars = re.sub(r'^[\w.@+-]+\Z', '', value)
     if forbidden_chars:
         raise ValidationError(
-            f'Недопустимые символы в имени пользователя: {forbidden_chars}')  # Запрещенный символ может повторятся несколько раз в имени, писать его несколько раз не нужно, нужно использовать set и join.
+            'Недопустимые символы в имени пользователя:'
+            .join(set(forbidden_chars)))
 
     return value
