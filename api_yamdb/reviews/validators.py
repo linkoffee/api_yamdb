@@ -13,6 +13,7 @@ def username_validator(value):
     forbidden_chars = re.sub(r'^[\w.@+-]+\Z', '', value)
     if forbidden_chars:
         raise ValidationError(
-            f'Недопустимые символы в имени пользователя: {forbidden_chars}')
+            'Недопустимые символы в имени пользователя:'
+            .join(set(forbidden_chars)))
 
     return value

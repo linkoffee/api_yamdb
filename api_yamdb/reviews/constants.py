@@ -31,11 +31,9 @@ MAX_SCORE = 10
 USER = 'user'  # падает всё почти
 ADMIN = 'admin'
 MODERATOR = 'moderator'
-SUPERUSER = 'superuser'
 
 ROLE_CHOICES = (
     (USER, USER),  # Правую часть нужно русифицировать.
     (ADMIN, ADMIN),
     (MODERATOR, MODERATOR),
-    (SUPERUSER, SUPERUSER),
 )

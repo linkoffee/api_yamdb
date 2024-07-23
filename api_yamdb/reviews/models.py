@@ -1,17 +1,15 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import (MaxValueValidator, MinValueValidator,)
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from .constants import (ADMIN, CHAR_OUTPUT_LIMIT, EMAIL_LENGTH,
-                        MAX_NAME_LENGTH, MAX_SLUG_LENGTH, MODERATOR,
-                        ROLE_CHOICES, USER, USERNAME_LENGTH)
-from .constants import (CHAR_OUTPUT_LIMIT, MAX_NAME_LENGTH, MAX_SCORE,
-                        MAX_SLUG_LENGTH, MIN_SCORE, MIN_YEAR, CURRENT_YEAR,
-                        ROLE_CHOICES)
+from .constants import (ADMIN, CHAR_OUTPUT_LIMIT, CURRENT_YEAR, EMAIL_LENGTH,
+                        MAX_NAME_LENGTH, MAX_SCORE, MAX_SLUG_LENGTH, MIN_SCORE,
+                        MIN_YEAR, MODERATOR, ROLE_CHOICES, USER,
+                        USERNAME_LENGTH)
 from .validators import username_validator
 
 
-class APIUser(AbstractUser):
+class User(AbstractUser):
     """Модель пользователя."""
 
     role = models.CharField(
@@ -34,8 +32,6 @@ class APIUser(AbstractUser):
     username = models.CharField(
         max_length=USERNAME_LENGTH,
         unique=True,
-        blank=False,
-        null=False,
         validators=[username_validator,]
     )
 
@@ -49,8 +45,8 @@ class APIUser(AbstractUser):
 
     class Meta:
         ordering = ('username', 'id',)
-        verbose_name = "Пользователь"
-        verbose_name_plural = "Пользователи"
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
         constraints = [
             models.UniqueConstraint(
                 fields=['username', 'email'],
@@ -146,7 +142,7 @@ class BaseReviewCommentModel(models.Model):
 
     text = models.TextField(verbose_name='Текст')
     author = models.ForeignKey(
-        APIUser,
+        User,
         on_delete=models.CASCADE,
         verbose_name='Автор'
     )
