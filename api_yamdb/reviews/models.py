@@ -34,7 +34,7 @@ class User(AbstractUser):
     username = models.CharField(
         max_length=USERNAME_LENGTH,
         unique=True,
-        validators=[username_validator,]
+        validators=[username_validator]
     )
 
     @property
