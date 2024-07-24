@@ -153,7 +153,7 @@ class APITokenObtainView(views.APIView):
         serializer = GetTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         token = serializer.save()
-        return Response({"token": token}, status=status.HTTP_200_OK)
+        return Response({'token': token}, status=status.HTTP_200_OK)
 
 
 class CommentViewSet(viewsets.ModelViewSet):

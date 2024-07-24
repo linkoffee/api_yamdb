@@ -140,7 +140,7 @@ class Title(models.Model):
         return self.name[:CHAR_OUTPUT_LIMIT]
 
 
-class BaseReviewCommentModel(models.Model):
+class TextAuthorPubDateModel(models.Model):
     """Базовый класс моделей отзыва и комментария."""
 
     text = models.TextField(verbose_name='Текст')
@@ -162,7 +162,7 @@ class BaseReviewCommentModel(models.Model):
         return self.text[:CHAR_OUTPUT_LIMIT]
 
 
-class Review(BaseReviewCommentModel):
+class Review(TextAuthorPubDateModel):
     """Модель отзыва."""
 
     score = models.IntegerField(
@@ -179,7 +179,7 @@ class Review(BaseReviewCommentModel):
         verbose_name='Наименование произведения'
     )
 
-    class Meta(BaseReviewCommentModel.Meta):
+    class Meta(TextAuthorPubDateModel.Meta):
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
         constraints = [
@@ -191,7 +191,7 @@ class Review(BaseReviewCommentModel):
         default_related_name = 'reviews'
 
 
-class Comment(BaseReviewCommentModel):
+class Comment(TextAuthorPubDateModel):
     """Модель комментария."""
 
     review = models.ForeignKey(
@@ -200,7 +200,7 @@ class Comment(BaseReviewCommentModel):
         verbose_name='Отзыв'
     )
 
-    class Meta(BaseReviewCommentModel.Meta):
+    class Meta(TextAuthorPubDateModel.Meta):
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
         default_related_name = 'comments'
