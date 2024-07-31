@@ -234,4 +234,4 @@ Nothing here
 
 ---
 
-### Авторы: [linkoffee](https://github.com/linkoffee), [JanuszOgajski](https://github.com/JanuszOgajski), [TatarnikovSergey](https://github.com/TatarnikovSergey)
+### Авторы: [Mikhail Kopochinskiy](https://github.com/linkoffee), [JanuszOgajski](https://github.com/JanuszOgajski), [TatarnikovSergey](https://github.com/TatarnikovSergey)
